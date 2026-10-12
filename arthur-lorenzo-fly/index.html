@@ -150,7 +150,14 @@ button:focus-visible{outline:3px dashed var(--accent);outline-offset:3px}
 .wallet{font-family:var(--font-display);font-size:13px;color:var(--accent);padding:6px 8px;border:3px solid var(--accent-deep);background:var(--bg)}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .tabs .tool[aria-selected="true"]{background:var(--accent);color:var(--bg)}
-.shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;width:100%;overflow-y:auto;min-height:0;flex:1;padding:4px}
+/* telas de menu: o dedo rola a lista (o jogo bloqueia o arrastar só no voo) */
+.layer,.layer *{touch-action:pan-y}
+.layer .stick,.layer .gp{touch-action:none}
+.gridwrap{display:flex;gap:8px;width:100%;min-height:0;flex:1}
+.shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;flex:1;min-width:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;min-height:0;padding:4px;align-content:start}
+.scrollbtns{display:flex;flex-direction:column;gap:10px;justify-content:center}
+.scrollbtns .tool{font-size:18px;padding:14px 12px;line-height:1}
+.scrollbtns .tool:disabled{opacity:.3;cursor:default}
 .shopgrid h3{grid-column:1/-1;margin:4px 0 0;font-family:var(--font-display);font-size:9px;color:var(--dim);text-align:left;font-weight:400}
 .item{background:var(--bg);border:3px solid var(--dim);padding:8px 6px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;
   font-family:var(--font-display);font-size:8px;line-height:1.4;color:var(--ink);min-width:0}
@@ -285,7 +292,13 @@ button:focus-visible{outline:3px dashed var(--accent);outline-offset:3px}
         <button class="tool" role="tab" data-tab="melhorias">MELHORIAS</button>
       </div>
       <p class="muted" id="shopMsg" aria-live="polite"></p>
-      <div class="shopgrid" id="shopGrid"></div>
+      <div class="gridwrap">
+        <div class="shopgrid" id="shopGrid"></div>
+        <div class="scrollbtns">
+          <button class="tool" id="shopUp" aria-label="Subir a lista">▲</button>
+          <button class="tool" id="shopDown" aria-label="Descer a lista">▼</button>
+        </div>
+      </div>
     </section>
   </div>
 
@@ -2349,7 +2362,7 @@ function shopClick(item, kind, own, key){
   if (kind === 'trail'){ trail = item.id; pset('trail', trail); }
   armed = null; Snd.fanfare(); renderShop(); $('shopMsg').textContent = 'Comprado: ' + item.name + '!';
 }
-function openShop(){ armed = null; showLayer('shopLayer'); $('shopMsg').textContent = 'Junte estrelas nas fases e troque por aviões, rastros e melhorias.'; renderShop(); }
+function openShop(){ armed = null; showLayer('shopLayer'); $('shopMsg').textContent = 'Junte estrelas nas fases e troque por aviões, rastros e melhorias.'; renderShop(); $('shopGrid').scrollTop = 0; paintScrollBtns(); }
 
 // escolha do jogador
 function renderWho(){
@@ -2404,7 +2417,16 @@ $('btnWho').addEventListener('click', toProfiles);
 $('btnFree').addEventListener('click', () => startGame(-1));
 $('btnShop').addEventListener('click', () => { Snd.init(); openShop(); });
 $('btnShopBack').addEventListener('click', toMap);
-$('shopTabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (!b) return; shopTab = b.dataset.tab; armed = null; renderShop(); });
+$('shopTabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (!b) return; shopTab = b.dataset.tab; armed = null; renderShop(); $('shopGrid').scrollTop = 0; paintScrollBtns(); });
+// setas ▲ ▼ rolam a lista do hangar (para quem não quer arrastar com o dedo)
+const shopGrid = $('shopGrid');
+function paintScrollBtns(){ const g = shopGrid, end = g.scrollHeight - g.clientHeight - 2;
+  $('shopUp').disabled = g.scrollTop <= 2; $('shopDown').disabled = g.scrollTop >= end; }
+function scrollShop(dir){ Snd.init(); Snd.tone(dir > 0 ? 440 : 550, 0.05); shopGrid.scrollBy({ top: dir * shopGrid.clientHeight * 0.8, behavior: 'smooth' }); }
+$('shopUp').addEventListener('click', () => scrollShop(-1));
+$('shopDown').addEventListener('click', () => scrollShop(1));
+shopGrid.addEventListener('scroll', paintScrollBtns, { passive: true });
+addEventListener('resize', () => { if (!$('shopLayer').hidden) paintScrollBtns(); });
 $('btnAgain').addEventListener('click', () => startGame());
 $('btnCont').addEventListener('click', continueFromCheckpoint);
 $('btnMenu').addEventListener('click', toMap);
@@ -2442,7 +2464,8 @@ btnB.addEventListener('pointerdown', (e) => { e.preventDefault(); Snd.init(); bt
 ['pointerup','pointercancel','pointerleave'].forEach(ev => btnB.addEventListener(ev, () => btnB.classList.remove('on')));
 function releaseAll(){ input.gas = false; input.keyGas = false; input.keyUp = false; input.keyDown = false; stickRelease(); }
 
-document.addEventListener('touchmove', (e) => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+// no voo o dedo não arrasta a página; nas telas de menu (mapa, hangar...) dá para rolar
+document.addEventListener('touchmove', (e) => { if (e.target.closest && e.target.closest('.layer')) return; if (e.cancelable) e.preventDefault(); }, { passive: false });
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 addEventListener('blur', releaseAll);
 // teclado (computador): setas ou W/S sobem e descem, espaço ou J acelera, K ou B salta, P pausa
