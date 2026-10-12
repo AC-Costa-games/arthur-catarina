@@ -10,8 +10,8 @@ android {
         applicationId 'com.arthurlorenzo.fly'
         minSdk 24
         targetSdk 34
-        versionCode 5
-        versionName '4.0'
+        versionCode 6
+        versionName '4.1'
     }
 
     // assinatura fixa: cada APK novo instala por cima do anterior sem apagar estrelas e recordes
