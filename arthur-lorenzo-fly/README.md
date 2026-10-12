@@ -1,6 +1,6 @@
 # Arthur Lorenzo Fly
 
-Jogo 2D em pixel art para celular, jogado deitado. Um avião de asa parasol decola, atravessa fases de sol, chuva, neve e noite desviando de pássaros, balões, raios, montanhas e cavernas, e pousa num aeroporto no fim de cada fase.
+Jogo 2D em pixel art para celular, jogado deitado. Um avião de asa parasol atravessa 12 fases (sol, chuva, neve, noite, ventania, deserto, mar, cidade, vulcão e arco-íris, mais dois chefões) desviando de pássaros, raios, prédios, lava e cavernas, e pousa num aeroporto no fim de cada fase.
 
 ![Menu do jogo](imagens/capturas/01-menu.png)
 
@@ -42,6 +42,18 @@ Na abertura, escolha quem vai voar: **Arthur** ou **Catarina**. Cada um tem seu 
 | 2. Chuva | Nuvens de tempestade **piscam antes de soltar um raio**: espere passar. O vento empurra o avião para baixo. |
 | 3. Neve | **Gelo nas asas:** sem acelerar, o avião fica pesado. Montanhas mais altas e uma caverna. |
 | 4. Noite | Escuro de verdade: **só o farol ilumina**. Morcegos e uma caverna. |
+| 5. ⚔ Dirigível Pirata | **Chefão.** Joga barris e dispara o canhão (uma linha vermelha avisa onde o tiro vai passar). |
+| 6. Ventania | Colunas de vento: **azul empurra para cima, laranja para baixo**. Pipas no céu. |
+| 7. Deserto | **Tempestade de areia** a cada 18 s (com aviso), urubus, cactos e uma caverna. |
+| 8. Mar | Tudo depois da praia é água. Navios com mastro, gaivotas e **pouso no porta-aviões**. |
+| 9. Cidade | Pôr do sol, **prédios** para passar por cima e helicópteros. |
+| 10. Vulcão | **O chão brilha antes da bola de lava subir.** Cinzas, brasas e uma caverna. |
+| 11. ⚔ Dragão de Fogo | **Chefão.** Leque de bolas de fogo, tiro mirado e brasas caindo do céu. |
+| 12. Arco-íris | **Fase bônus**, sem obstáculos: arcos de estrelas para pegar. |
+
+**Chefões:** o avião não atira. Durante a luta aparecem **foguetes** no caminho; cada foguete que você pega é lançado no chefão. O Dirigível aguenta 5 golpes e o Dragão 6 (3 no modo fácil). Depois da vitória aparece o aeroporto. A 2ª estrela do chefão é vencer sem perder nenhum avião.
+
+**Marcadores de progressão:** bandeiras quadriculadas no caminho, a 1/3 e 2/3 da fase, **logo antes de cada caverna e no meio dela**, e no começo da luta com o chefão. A bandeira fica verde quando você passa. Se os aviões acabarem, o botão **CONTINUAR DO MARCADOR** volta para a última bandeira, com 3 aviões de novo e as estrelas que você tinha ali.
 
 Cada fase termina num **aeroporto**. Perto dele, aparece uma **linha verde** até a pista: solte o A e desça por ela. As luzes ao lado da pista ficam brancas quando o avião está alto e vermelhas quando está baixo. Se passar da pista sem pousar, o avião arremete e tenta de novo.
 

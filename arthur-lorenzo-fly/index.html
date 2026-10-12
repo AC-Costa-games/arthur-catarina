@@ -126,9 +126,18 @@ button:focus-visible{outline:3px dashed var(--accent);outline-offset:3px}
 .maphead{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;flex-wrap:wrap}
 .maphead h2{font-size:clamp(13px,2.6vw,18px)}
 .maphead .row{gap:8px}
-.trail{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;width:100%}
+.trail{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px 12px;width:100%}
 .trail li{position:relative;display:flex}
-.trail li+li::before{content:"";position:absolute;left:-12px;width:12px;top:34px;border-top:3px dashed var(--dim)}
+.trail li+li::before{content:"";position:absolute;left:-12px;width:12px;top:30px;border-top:3px dashed var(--dim)}
+.trail li:nth-child(6n+1)::before{display:none}
+.node.boss{border-color:var(--hot)}
+.node.boss.next{border-color:var(--hot)}
+
+/* barra de vida do chefão */
+#bossBar{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 34px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:5px;
+  pointer-events:none;font-family:var(--font-display);font-size:9px;color:var(--ink);text-shadow:2px 2px 0 var(--bg)}
+#bossBar i{display:block;width:180px;height:10px;border:3px solid var(--ink);background:var(--panel);box-shadow:0 0 0 2px var(--bg)}
+#bossBar b{display:block;height:100%;background:var(--hot);transition:width .3s steps(4)}
 .node{flex:1;min-width:0;background:var(--bg);border:3px solid var(--dim);padding:8px 4px 7px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;
   font-family:var(--font-display);font-size:8px;line-height:1.45;color:var(--ink);text-align:center}
 .node canvas{width:64px;height:48px;image-rendering:pixelated;display:block}
@@ -164,8 +173,11 @@ button:focus-visible{outline:3px dashed var(--accent);outline-offset:3px}
 @media (max-height:400px){ .stick{width:112px;height:112px} .knob{width:50px;height:50px;margin:-25px 0 0 -25px} .btns{transform:scale(.88);transform-origin:right bottom} }
 @media (orientation:landscape) and (max-height:520px){
   .panel.map{padding:12px 16px;gap:8px}
-  .node{padding:5px 3px 4px;gap:3px}
-  .node canvas{width:48px;height:36px}
+  .node{padding:4px 2px 3px;gap:2px;font-size:7px}
+  .node canvas{width:40px;height:30px}
+  .node .st{font-size:13px}
+  .trail{gap:6px 10px}
+  .trail li+li::before{top:24px}
   .who button canvas{width:72px;height:48px}
   .bigstars svg{width:36px;height:36px}
   .checks{font-size:15px}
@@ -191,6 +203,7 @@ button:focus-visible{outline:3px dashed var(--accent);outline-offset:3px}
       <button class="tool" id="btnPause" aria-label="Pausar">II</button>
     </div>
   </div>
+  <div id="bossBar" hidden><span id="bossName"></span><i><b id="bossHp"></b></i></div>
   <div id="hint" hidden></div>
   <div id="banner" hidden><b id="bannerBig"></b><span id="bannerSmall"></span></div>
 
@@ -267,6 +280,7 @@ button:focus-visible{outline:3px dashed var(--accent);outline-offset:3px}
       </dl>
       <span id="newBest" hidden>NOVO RECORDE!</span>
       <div class="row">
+        <button class="btn" id="btnCont" hidden>CONTINUAR DO MARCADOR</button>
         <button class="btn" id="btnAgain">VOAR DE NOVO</button>
         <button class="btn ghost" id="btnMenu">MAPA</button>
       </div>
@@ -409,6 +423,92 @@ const ICON_MOON = disc(5, (x, y) => { if (x*x + y*y > 25 || (x - 3)*(x - 3) + (y
 const ICON_FLAKE = spriteFromRows(['....W....','.W..W..W.','..W.W.W..','...WWW...','WWWWWWWWW','...WWW...','..W.W.W..','.W..W..W.','....W....'], { W:'#ffffff' });
 const ICON_RAIN = spriteFromRows(['...oooo.....','..oCCCCoo...','.oCCCCCCCo..','oCCCCCCCCCo.','oCCCCCCCCCCo','.oooooooooo.','..b..y..b...','.b..y..b....','b..y..b.....'],
   { o:'#2e2a3c', C:'#8a90a8', b:'#9fd0ff', y:'#ffe14a' });
+const ICON_WIND = spriteFromRows(['..WWWWW.....','.W.....W....','.......W....','WWWWWWW.....','............','WWWWWWWWWW..','..........W.','.......W..W.','........WW..'], { W:'#ffffff' });
+const ICON_CACTUS = spriteFromRows(['....g....','...ggg...','.g.ggg...','.g.ggg.g.','.g.ggg.g.','.ggggg.g.','...gggg..','...ggg...','...ggg...','...ggg...'], { g:'#3f8a46' });
+const ICON_SHIP = spriteFromRows(['.....r......','.....oWW....','.....oWWW...','.....oWWWW..','.....oWWWWW.','.....o......','oooooooooooo','.HHHHHHHHHH.','..HHHHHHHH..','bbbbbbbbbbbb'],
+  { o:'#5a3a22', r:'#e8433a', W:'#ffffff', H:'#a8222a', b:'#3a7be8' });
+const ICON_CITY = spriteFromRows(['.......oooo.','.......oyoo.','..ooo..oooo.','..oyo..oyoo.','..ooo..oooo.','oooooo.oooo.','oyooyo.oyoo.','oooooooooooo','oyooyooyooyo','oooooooooooo'], { o:'#4a4858', y:'#ffd95c' });
+const ICON_VOLCANO = spriteFromRows(['.....r.r.....','....r.y.r....','.....yyy.....','....bbybb....','...bbbybbb...','..bbbbbbbbb..','.bbbbbbbbbbb.','bbbbbbbbbbbbb'], { r:'#ff5a2a', y:'#ffb02e', b:'#4a3030' });
+const ICON_RAINBOW = spriteFromRows(['....rrrrrr....','..rroooooorr..','.royyyyyyyyor.','royggggggggyor','roygbbbbbbgyor','roygb....bgyor','roygb....bgyor'],
+  { r:'#e8433a', o:'#ff9a3c', y:'#ffd23f', g:'#3fa34d', b:'#3a7be8' });
+const ICON_ZEP = spriteFromRows(['...oooooooo...','.ooRRRRRRRRoo.','oRWKRRRRRRRRRo','oRRRRRRRRRRRRo','.ooRRRRRRRRoo.','....ooGGoo....','.....oooo.....'], { o:'#1b1626', R:'#9aa0b8', W:'#ffffff', K:'#1b1626', G:'#5a3a22' });
+const ICON_DRAGON = spriteFromRows(['..o.....o...','..oo...oo...','..oRRRRRo...','.oRYKRRRRo..','oRRRRRRRRRo.','oRRRRRRRRRRo','.oRRYYYYYYo.','..oRRRRRRo..','...oooooo...'], { o:'#1b1626', R:'#c8302a', Y:'#ffb02e', K:'#1b1626' });
+
+// obstáculos das fases novas
+const VULTURE = [0, 1].map(i => spriteFromRows(i ? ['.........','..ooooo..','.YoBBBBo.','..oBBBo..','.o.....o.','o.......o'] : ['o.......o','.o.....o.','..oBBBo..','.YoBBBBo.','...ooo...','.........'],
+  { o:'#1b1626', B:'#4a3020', Y:'#e89a9a' }));
+const GULL = [0, 1].map(i => spriteFromRows(i ? ['.........','..ooooo..','.YoBBBBo.','..oBBBo..','.o.....o.','o.......o'] : ['o.......o','.o.....o.','..oBBBo..','.YoBBBBo.','...ooo...','.........'],
+  { o:'#59566e', B:'#f4f4f8', Y:'#f4b41a' }));
+const KITE_ROWS = ['....o....','...oRo...','..oRRYo..','.oRRRYYo.','oRRRRYYYo','.oRRRYYo.','..oRRYo..','...oRo...','....o....'];
+const KITES = [['#e8433a','#ffd23f'],['#3a7be8','#7dff8a'],['#8e4ad6','#ff8fc8']].map(([R, Y]) => spriteFromRows(KITE_ROWS, { o:'#1b1626', R, Y }));
+const HELI = spriteFromRows(['.....oo..........','..ooooooo........','.oGGBBBBBo.......','oGGBBBBBBBooooooo','oBBBBBBBBBBBBBBBo','.oBBBBBBBoo...oBo','..ooooooo......o.','...o...o.........','.ooooooooo.......'],
+  { o:'#1b1626', B:'#e8b030', G:'#9fe3ff' });
+const ROCKET = spriteFromRows(['..y..','.yYy.','.oRo.','.RWR.','.RRR.','.RWR.','oRRRo','o.o.o'], { o:'#1b1626', R:'#e8433a', W:'#ffffff', y:'#ffcc3a', Y:'#fff6c8' });
+const BARREL = spriteFromRows(['.ooo.','oBBBo','okkko','oBBBo','okkko','.ooo.'], { o:'#1b1626', B:'#8b5a2b', k:'#2e2a3c' });
+
+/* ---------- chefões: desenhados por formas, com contorno automático ---------- */
+function shapeSprite(w, h, fn){
+  const cols = [];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) cols.push(fn(x, y));
+  const c = mk(w, h), g = c.getContext('2d'), at = (x, y) => x >= 0 && y >= 0 && x < w && y < h && cols[y*w + x];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    let col = cols[y*w + x];
+    if (!col && (at(x-1, y) || at(x+1, y) || at(x, y-1) || at(x, y+1))) col = '#1b1626';
+    if (col){ g.fillStyle = col; g.fillRect(x, y, 1, 1); }
+  }
+  return c;
+}
+function flashOf(spr){ const c = mk(spr.width, spr.height), g = c.getContext('2d');
+  g.drawImage(spr, 0, 0); g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(0, 0, c.width, c.height); return c; }
+const inTri = (x, y, ax, ay, bx, by, cx, cy) => {
+  const s1 = (bx-ax)*(y-ay) - (by-ay)*(x-ax), s2 = (cx-bx)*(y-by) - (cy-by)*(x-bx), s3 = (ax-cx)*(y-cy) - (ay-cy)*(x-cx);
+  return (s1 >= 0 && s2 >= 0 && s3 >= 0) || (s1 <= 0 && s2 <= 0 && s3 <= 0);
+};
+// dirigível pirata (nariz para a esquerda, olho bravo e caveira)
+const ZEP = shapeSprite(78, 34, (x, y) => {
+  const ex = (x - 39) / 33, ey = (y - 13) / 11.5;
+  if (ex*ex + ey*ey <= 1){
+    if (Math.hypot(x - 15, y - 11) <= 3.2) return Math.hypot(x - 14, y - 11.5) <= 1.4 ? '#1b1626' : '#ffffff';
+    if (x >= 10 && x <= 19 && y === Math.round(5 + (x - 10) * 0.3)) return '#1b1626';
+    if (Math.hypot(x - 47, y - 11) <= 3) return (x === 46 || x === 48) && y === 11 ? '#1b1626' : '#f4ecd8';
+    if (y === 14 && x >= 45 && x <= 49) return x % 2 ? '#f4ecd8' : '#1b1626';
+    if (x > 22 && (x < 42 || x > 52) && (x - 22) % 12 < 3) return '#c8302a';
+    if (ey < -0.45) return '#c8cde0';
+    if (ey > 0.5) return '#6a7088';
+    return '#9aa0b8';
+  }
+  if (x >= 64 && x <= 75){ const k = x - 64;
+    if (y >= 0 && y <= 10 && 10 - y <= k * 0.95) return '#c8302a';
+    if (y >= 16 && y <= 26 && y - 16 <= k * 0.95) return '#c8302a'; }
+  if (y >= 26 && y <= 31 && x >= 30 && x <= 48) return y === 28 && x % 4 === 1 ? '#ffd95c' : '#5a3a22';
+  if (y === 25 && (x === 33 || x === 45)) return '#2e2a3c';
+  return null;
+});
+// dragão de fogo, dois quadros de asa
+function dragonFrame(up){
+  return shapeSprite(62, 44, (x, y) => {
+    if (Math.hypot(x - 9, y - 11) <= 2.2) return Math.hypot(x - 8, y - 11) <= 1 ? '#1b1626' : '#fff27a';
+    if ((x === 13 && y === 5) || (x === 14 && y === 4) || (x === 15 && y === 3) || (x === 9 && y === 5) || (x === 9 && y === 4) || (x === 10 && y === 3)) return '#f4ecd8';
+    const head = ((x - 10) / 8) ** 2 + ((y - 11) / 5.5) ** 2 <= 1, snout = x >= 1 && x <= 8 && y >= 12 && y <= 16;
+    if (head || snout){ if (snout && y === 16) return '#f0a040'; if (x <= 3 && y === 13) return '#1b1626'; return '#c8302a'; }
+    if (y === 17 && x >= 2 && x <= 7 && x % 2 === 0) return '#ffffff';
+    const bt = 25 - 8.5 * Math.sqrt(Math.max(0, 1 - ((x - 32) / 14) ** 2));
+    if (x >= 22 && x <= 42 && x % 5 === 0 && y >= bt - 3 && y < bt) return '#f0a040';
+    const neck = ((x - 18) / 6) ** 2 + ((y - 17) / 4.5) ** 2 <= 1, body = ((x - 32) / 14) ** 2 + ((y - 25) / 8.5) ** 2 <= 1;
+    if (neck || body){ if ((body && y >= 28) || (neck && y > 20)) return '#f0a040'; return (x + y) % 7 === 0 ? '#a8222a' : '#c8302a'; }
+    if (y >= 32 && y <= 36 && ((x >= 26 && x <= 28) || (x >= 37 && x <= 39))) return '#a8222a';
+    if (x >= 44 && x <= 57){ const k = (x - 44) / 13, cy = 27 + k * 6, th = 3.5 - k * 2.5; if (Math.abs(y - cy) <= th) return '#c8302a'; }
+    if (inTri(x, y, 55, 31, 60, 27, 60, 37)) return '#f0a040';
+    if (up ? inTri(x, y, 26, 19, 46, 1, 42, 19) : inTri(x, y, 26, 25, 48, 42, 40, 26)) return x % 4 === 0 ? '#6a1612' : '#8a1f1a';
+    return null;
+  });
+}
+const DRAGON = [dragonFrame(true), dragonFrame(false)];
+const BOSSES = {
+  zep:    { name:'DIRIGÍVEL PIRATA', hp:5, easyHp:3, frames:[ZEP], box:[-34, -12, 32, 18], mouth:[-30, 4], cx:38, cy:13 },
+  dragon: { name:'DRAGÃO DE FOGO',   hp:6, easyHp:3, frames:DRAGON, box:[-28, -14, 26, 14], mouth:[-30, -6], cx:30, cy:22 },
+};
+for (const k in BOSSES) BOSSES[k].flash = BOSSES[k].frames.map(flashOf);
 
 function makeCloud(w, h, top = '#ffffff', bottom = '#dbe7f7'){
   const c = mk(w, h), g = c.getContext('2d'), blobs = [];
@@ -436,6 +536,8 @@ const SKY_DAY   = ['#3b6fd1','#4f86df','#68a0ea','#86b9f2','#a7d0f7','#cbe7fb'];
 const SKY_DUSK  = ['#2d2a6e','#5a3d8a','#a24c86','#e0707a','#f59a6a','#ffc77a'];
 const SKY_NIGHT = ['#070a1e','#0b1030','#111a44','#18265a','#22336b','#2e4378'];
 const SKY_STORM = ['#353a52','#424a64','#535c76','#656f88','#79839a','#8e97ab'];
+const SKY_DESERT = ['#e0844a','#eb9a5c','#f2b070','#f6c488','#f9d6a4','#fce6c2'];
+const SKY_VOLCANO = ['#1a0a0e','#2e1016','#4a161a','#6a2020','#8a3024','#a8442a'];
 const skies = {};
 function buildSky(pal){
   const c = mk(VW, GY), g = c.getContext('2d'), img = g.createImageData(VW, GY), cols = pal.map(rgb);
@@ -456,6 +558,11 @@ const SEASONS = [
   { name:'OUTONO',    grass:'#9c9a3a', grassTop:'#d4b44a', dirt:'#74462a', hill:'#b8743a', hillTop:'#d99a4a', far:'#9a8ac4', farTop:'#c0b2e0', tree0:'#c8502a', tree1:'#f0a23a', mtn0:'#8a5a3a', mtn1:'#6a4330', snow:0 },
   { name:'INVERNO',   grass:'#dfe7f5', grassTop:'#ffffff', dirt:'#6a5a5a', hill:'#cbd6ec', hillTop:'#f2f6ff', far:'#a8b4dc', farTop:'#eef2ff', tree0:'#d6e0f2', tree1:'#ffffff', mtn0:'#8a8aa0', mtn1:'#6a6a82', snow:1 },
   { name:'PRIMAVERA', grass:'#5cc25a', grassTop:'#9be86a', dirt:'#7a4a2a', hill:'#6fb86a', hillTop:'#93d886', far:'#8d97d6', farTop:'#b2baea', tree0:'#f39ac0', tree1:'#ffd0e2', mtn0:'#7a5a4a', mtn1:'#5e4338', snow:0 },
+  // paisagens só das fases (o voo livre usa as 4 estações acima)
+  { name:'DESERTO',   grass:'#e8c872', grassTop:'#f6dc8e', dirt:'#c99a50', hill:'#dba85e', hillTop:'#f0c47a', far:'#c98a5a', farTop:'#e2aa7a', tree0:'#3f8a46', tree1:'#5fb05a', mtn0:'#c47a3e', mtn1:'#9a5a2c', snow:0, cactus:1 },
+  { name:'CIDADE',    grass:'#8a8aa0', grassTop:'#b8b8c8', dirt:'#3a3a48', hill:'#4a4a62', hillTop:'#5e5e78', far:'#6a5a8a', farTop:'#7e6e9e', tree0:'#2f8a3a', tree1:'#4fb35a', mtn0:'#6a6a7a', mtn1:'#55556a', snow:0, city:1 },
+  { name:'VULCÃO',    grass:'#4a2f2a', grassTop:'#6a3a2a', dirt:'#2a1a1a', hill:'#3e2626', hillTop:'#5a3030', far:'#5a2a2a', farTop:'#7a3a2a', tree0:'#2a1a1a', tree1:'#3a2424', mtn0:'#4a3030', mtn1:'#382222', snow:0, lava:1 },
+  { name:'PRAIA',     grass:'#f0d890', grassTop:'#fff0b8', dirt:'#d8b870', hill:'#5fae62', hillTop:'#7ed06e', far:'#8d97d6', farTop:'#b2baea', tree0:'#2f8a3a', tree1:'#4fb35a', mtn0:'#7a7a8a', mtn1:'#5e5e70', snow:0 },
 ];
 const SKEYS = ['grass','grassTop','dirt','hill','hillTop','far','farTop','tree0','tree1','mtn0','mtn1'];
 let SE = null;     // paleta da estação atual (misturada na transição)
@@ -518,15 +625,32 @@ const PROFILES = [
   { id:'catarina', name:'CATARINA', plane:2, easy:true },
 ];
 // len em metros (no modo fácil a fase tem 55% do tamanho); d0 → d1: dificuldade do começo ao fim; cave: metros da caverna
+// mix: chance de cada obstáculo; skyPal: céu próprio; boss: fase de chefão (sem obstáculos, o aeroporto aparece depois da vitória)
 const PHASES = [
   { id:'sol',   name:'CÉU DE SOL', season:0, day:0.22, len:1500, d0:0,   d1:0.35, icon:ICON_SUN,   sky:'#68a0ea',
-    tip:'PEGUE AS ESTRELAS E POUSE NO AEROPORTO', easyTip:'PEGUE AS ESTRELAS' },
+    mix:{ mtn:36, bird:34, bal:30 }, tip:'PEGUE AS ESTRELAS E POUSE NO AEROPORTO', easyTip:'PEGUE AS ESTRELAS' },
   { id:'chuva', name:'CHUVA',      season:3, day:0.25, len:1700, d0:0.2, d1:0.5,  icon:ICON_RAIN,  sky:'#56607a', storm:true,
-    tip:'NUVEM PISCANDO = RAIO! ESPERE PASSAR', easyTip:'VOE NA CHUVA' },
+    mix:{ mtn:30, bird:28, bolt:28, bal:14 }, tip:'NUVEM PISCANDO = RAIO! ESPERE PASSAR', easyTip:'VOE NA CHUVA' },
   { id:'neve',  name:'NEVE',       season:2, day:0.3,  len:1900, d0:0.3, d1:0.6,  icon:ICON_FLAKE, sky:'#a7d0f7', ice:true, cave:800,
-    tip:'GELO NAS ASAS: SEGURE A PARA SUBIR', easyTip:'OLHA A NEVE!' },
+    mix:{ mtn:36, bird:34, bal:30 }, tip:'GELO NAS ASAS: SEGURE A PARA SUBIR', easyTip:'OLHA A NEVE!' },
   { id:'noite', name:'NOITE',      season:0, day:0.73, len:2100, d0:0.4, d1:0.75, icon:ICON_MOON,  sky:'#111a44', night:true, cave:1000,
-    tip:'O FAROL ILUMINA O CAMINHO', easyTip:'VOE COM A LUA' },
+    mix:{ mtn:36, bat:34, bal:30 }, tip:'O FAROL ILUMINA O CAMINHO', easyTip:'VOE COM A LUA' },
+  { id:'chefe1', name:'DIRIGÍVEL PIRATA', season:0, day:0.3, len:0, d0:0, d1:0, icon:ICON_ZEP, sky:'#86b9f2', boss:'zep',
+    tip:'PEGUE OS FOGUETES PARA ACERTAR O CHEFÃO', easyTip:'PEGUE OS FOGUETES!' },
+  { id:'vento', name:'VENTANIA',   season:1, day:0.3,  len:2000, d0:0.35, d1:0.65, icon:ICON_WIND, sky:'#86b9f2', wind:true,
+    mix:{ mtn:30, bird:24, kite:22, gust:24 }, tip:'SETAS BRANCAS: O VENTO EMPURRA O AVIÃO', easyTip:'CUIDADO COM O VENTO' },
+  { id:'deserto', name:'DESERTO',  season:4, day:0.35, len:2100, d0:0.4, d1:0.7,  icon:ICON_CACTUS, sky:'#f2b070', skyPal:'desert', sand:true, cave:1100,
+    mix:{ mtn:40, vult:36, bal:24 }, tip:'NA TEMPESTADE DE AREIA, LEMBRE DO CAMINHO', easyTip:'OLHA OS CACTOS!' },
+  { id:'mar',   name:'MAR',        season:7, day:0.25, len:2200, d0:0.4, d1:0.7,  icon:ICON_SHIP, sky:'#68a0ea', sea:true,
+    mix:{ ship:34, gull:38, bal:12, mtn:16 }, tip:'POUSE NO PORTA-AVIÕES. NÃO CAIA NO MAR!', easyTip:'POUSE NO NAVIO' },
+  { id:'cidade', name:'CIDADE',    season:5, day:0.5,  len:2300, d0:0.45, d1:0.75, icon:ICON_CITY, sky:'#e0707a', city:true,
+    mix:{ bld:46, heli:28, bird:12, bal:14 }, tip:'VOE POR CIMA DOS PRÉDIOS', easyTip:'VOE SOBRE A CIDADE' },
+  { id:'vulcao', name:'VULCÃO',    season:6, day:0.3,  len:2400, d0:0.5, d1:0.85, icon:ICON_VOLCANO, sky:'#6a2020', skyPal:'volcano', volcano:true, cave:1300,
+    mix:{ mtn:34, lava:34, bat:16, bird:16 }, tip:'O CHÃO BRILHA ANTES DA LAVA SUBIR', easyTip:'CUIDADO COM A LAVA' },
+  { id:'chefe2', name:'DRAGÃO DE FOGO', season:6, day:0.3, len:0, d0:0, d1:0, icon:ICON_DRAGON, sky:'#6a2020', skyPal:'volcano', volcano:true, boss:'dragon',
+    tip:'PEGUE OS FOGUETES E FUJA DO FOGO', easyTip:'PEGUE OS FOGUETES!' },
+  { id:'arcoiris', name:'ARCO-ÍRIS', season:3, day:0.2, len:1500, d0:0, d1:0, icon:ICON_RAINBOW, sky:'#a7d0f7', rainbow:true,
+    mix:{ starArc:100 }, tip:'FASE BÔNUS: PEGUE TODAS AS ESTRELAS!', easyTip:'PEGUE AS ESTRELAS!' },
 ];
 let prof = PROFILES[0], EASY = false, sel = 0, best = 0;
 const pget = (k, d) => store.get(prof.id + '.' + k, d);
@@ -554,6 +678,11 @@ let stars = 0, saves = 0, lives = LIVES, invuln = 0;
 let shake = 0, flash = 0, boomT = 0, puffT = 0, crashWhy = '', lastSeason = 0;
 let pilot = null, ghost = null;
 let caves = 0, caveSeen = false, lastCaveEnd = 0;
+let boss = null, bossDone = false, missiles = [], hitsTaken = 0;   // chefão, foguetes lançados e sustos no modo fácil
+let cps = [], snap = null;                                         // marcadores de progressão e o último salvo
+let sandT = 0, sandK = 0, sandWarned = -1;                         // tempestade de areia
+const LAVA_CYC = 3.4, LAVA_WARN = 1.1, LAVA_FLY = 1.6;
+const seaAt = (x) => inPhase() && run.ph.sea && x > RUNWAY + 140 && !onAirport(x);
 
 const meters = () => Math.max(0, Math.floor(odo / 4));
 const diff = () => EASY ? 0
@@ -591,14 +720,26 @@ function caveAt(o, wx){
 }
 function caveOf(wx){ for (const o of obs) if (o.k === 'cave' && wx >= o.x && wx <= o.x + o.len) return o; return null; }
 function ceilAt(wx){ const o = caveOf(wx); return o ? caveAt(o, wx).ceil : -Infinity; }
+// prédios e navios são feitos de retângulos sólidos [x0, x1, topo]
+function rectsOf(o){
+  if (o.k === 'bld') return [[o.x, o.x + o.w, GY - o.h]];
+  if (o.k === 'ship') return [[o.x, o.x + o.w, GY - 9], [o.x + 30, o.x + 35, GY - o.mh], [o.x + 35, o.x + 48, GY - o.mh + 10]];
+  return null;
+}
 function mtnTop(wx){
   let h = 0;
   for (const o of obs){
     if (o.dead) continue;
     if (o.k === 'mtn') h = Math.max(h, mtnH(o, wx));
     else if (o.k === 'cave'){ const ca = caveAt(o, wx); if (ca) h = Math.max(h, GY - ca.floor); }
+    else if (o.k === 'bld' || o.k === 'ship'){ for (const [a, b, top] of rectsOf(o)) if (wx >= a && wx < b) h = Math.max(h, GY - top); }
   }
   return h > 0 ? GY - h : Infinity;
+}
+function solidWhy(wx){
+  if (caveOf(wx)) return 'caverna';
+  for (const o of obs) if ((o.k === 'bld' || o.k === 'ship') && wx >= o.x && wx < o.x + o.w) return o.k === 'bld' ? 'predio' : 'navio';
+  return 'montanha';
 }
 function makeCave(x, d){
   caveSeen = true; x = Math.round(x);
@@ -610,22 +751,58 @@ function makeCave(x, d){
   const nb = Math.max(1, Math.floor(len / 160 * (0.6 + d)));
   for (let i = 0; i < nb; i++){ const bx = x + 110 + Math.random()*(len - 170); obs.push({ k:'bat', x: bx, cave: o, ph: rand(0, 6), amp: o.g*0.22, y: caveCenter(o, bx) }); }
   lastCaveEnd = x + len; nextSpawn = x + len + 150;
+  // marcadores: um logo antes da caverna e outro no meio dela
+  if (run.ph && !EASY){
+    cps = cps.filter(c => c.taken || Math.abs(c.x - (x - 160)) >= 320);
+    addCheckpoint(x - 160, true); if (len > 420) addCheckpoint(x + len / 2, true);
+  }
+}
+function addCheckpoint(x, force){
+  if (!force && cps.some(c => Math.abs(c.x - x) < 320)) return;
+  cps.push({ x: Math.round(x), taken: false }); cps.sort((a, b) => a.x - b.x);
 }
 function addStar(x, y){ obs.push({ k:'star', x, y, ph: rand(0, 6) }); starTotal++; }
+const DEFAULT_MIX = { mtn:36, bird:34, bal:30 };
+function pickKind(mix){
+  const ok = (k) => !(EASY && k === 'bolt');   // no fácil não tem raio
+  let tot = 0; for (const k in mix) if (ok(k)) tot += mix[k];
+  let r = Math.random() * tot;
+  for (const k in mix){ if (!ok(k)) continue; r -= mix[k]; if (r < 0) return k; }
+  return 'bal';
+}
 function spawnAt(x, gap){
-  const d = diff(), r = Math.random(), ph = run.ph;
-  const storm = ph && ph.storm && !EASY;
-  if (r < (storm ? 0.3 : 0.36)){
+  const d = diff(), ph = run.ph, k = pickKind(ph ? ph.mix : DEFAULT_MIX), seed = (Math.random()*1e6)|0;
+  if (k === 'starArc'){   // arco-íris: arcos e linhas de estrelas
+    const n = 5 + ((Math.random()*3)|0), base = rand(50, GY - 40), amp = rand(-30, 30);
+    for (let i = 0; i < n; i++) addStar(x + i * 14, clamp(base - Math.sin(i / (n - 1) * Math.PI) * amp, 24, GY - 22));
+    return;
+  }
+  if (k === 'mtn'){
     let h = Math.min(rand(40, 70 + 50*d), GY - 50);
     if (ph && ph.ice) h = Math.min(h + 14, GY - 46);   // montanhas nevadas mais altas
     if (EASY) h = Math.min(h, 44);
-    obs.push({ k:'mtn', x, w: rand(70, 140), h, seed: (Math.random()*1e6)|0 });
-  } else if (r < (storm ? 0.58 : 0.7)){
+    obs.push({ k:'mtn', x, w: rand(70, 140), h, seed });
+  } else if (k === 'bird' || k === 'bat' || k === 'gull' || k === 'vult'){
     const n = EASY ? 1 : Math.random() < 0.25 + 0.45*d ? (Math.random() < d ? 3 : 2) : 1;
-    const by = rand(30, GY - 62), off = [[0,0],[11,-9],[11,9]], k = ph && ph.night ? 'bat' : 'bird';
-    for (let i = 0; i < n; i++) obs.push({ k, x: x + off[i][0], by: by + off[i][1], y: by, ph: rand(0, 6) });
-  } else if (storm && r < 0.86){
+    const by = rand(30, GY - 62), off = [[0,0],[11,-9],[11,9]];
+    for (let i = 0; i < n; i++) obs.push({ k: k === 'bat' ? 'bat' : 'bird', sp: k, x: x + off[i][0], by: by + off[i][1], y: by, ph: rand(0, 6) });
+  } else if (k === 'bolt'){
     obs.push({ k:'bolt', x, t: -1, was: false, w: 24 });   // nuvem de tempestade que solta raios
+  } else if (k === 'kite'){
+    const by = rand(30, GY - 64); obs.push({ k:'kite', x, by, y: by, ph: rand(0, 6), pal: (Math.random()*KITES.length)|0 });
+  } else if (k === 'gust'){
+    obs.push({ k:'gust', x, w: Math.round(rand(90, 130)), dir: Math.random() < 0.5 ? -1 : 1 });
+  } else if (k === 'ship'){
+    obs.push({ k:'ship', x, w: 64, mh: Math.round(EASY ? rand(48, 58) : rand(58, 78 + 30*d)), seed });
+  } else if (k === 'bld'){   // quarteirão com 1 a 3 prédios
+    const n = 1 + ((Math.random() * (EASY ? 1.5 : 3))|0), cols = ['#8a6a7a','#6a7a9a','#9a8a6a','#7a8a7a','#a07060'];
+    let bx = x;
+    for (let i = 0; i < n; i++){ const w = Math.round(rand(26, 40)), h = Math.round(EASY ? rand(30, 50) : rand(40, 70 + 45*d));
+      obs.push({ k:'bld', x: bx, w, h, seed: seed + i, col: cols[(seed + i) % cols.length] }); bx += w + 3; }
+  } else if (k === 'heli'){
+    const by = rand(36, GY - 74); obs.push({ k:'heli', x, by, y: by, ph: rand(0, 6) });
+  } else if (k === 'lava'){
+    obs.push({ k:'lava', x, t: -1, peak: rand(26, 70), y: GY, w: 14, was: false });
   } else {
     const by = rand(34, GY - 52); obs.push({ k:'bal', x, by, y: by, ph: rand(0, 6), pal: (Math.random()*BALLOONS.length)|0 });
   }
@@ -636,6 +813,7 @@ function spawnAt(x, gap){
   }
 }
 function spawn(){
+  if (run.ph && run.ph.boss) return;   // na luta com o chefão não há obstáculos comuns
   const stop = run.air - 1150;   // céu livre em toda a rampa de pouso
   while (nextSpawn < camX + VW + 80 && nextSpawn < stop){
     const d = diff(), m = meters();
@@ -648,26 +826,40 @@ function spawn(){
   }
 }
 const boltOn = (o) => o.t >= 0 && o.t % BOLT_CYC >= BOLT_WARN && o.t % BOLT_CYC < BOLT_WARN + BOLT_HIT;
+function gustAt(x){ for (const o of obs) if (o.k === 'gust' && x >= o.x && x <= o.x + o.w) return o; return null; }
+// bola de lava: sobe e desce depois do aviso no chão (null quando está no chão)
+function lavaY(o){
+  if (o.t < 0) return null;
+  const p = o.t % LAVA_CYC; if (p < LAVA_WARN || p > LAVA_WARN + LAVA_FLY) return null;
+  const s = (p - LAVA_WARN) / LAVA_FLY; return GY - 4 * s * (1 - s) * (GY - o.peak);
+}
 function boxes(o){
   if (o.k === 'bolt') return boltOn(o) ? [[o.x-4, BOLT_TOP, o.x+4, GY]] : [];
   if (o.k === 'bird' || o.k === 'bat') return [[o.x-4, o.y-2, o.x+4, o.y+3]];
   if (o.k === 'bal') return [[o.x-6, o.y-8, o.x+6, o.y+2], [o.x-2, o.y+5, o.x+2, o.y+8]];
   if (o.k === 'star') return [[o.x-5, o.y-5, o.x+5, o.y+5]];
+  if (o.k === 'rocket') return [[o.x-6, o.y-6, o.x+6, o.y+6]];
+  if (o.k === 'kite') return [[o.x-4, o.y-4, o.x+4, o.y+4]];
+  if (o.k === 'heli') return [[o.x-8, o.y-3, o.x+8, o.y+4]];
+  if (o.k === 'bomb' || o.k === 'shot') return [[o.x-3, o.y-3, o.x+3, o.y+3]];
+  if (o.k === 'lava'){ const y = lavaY(o); return y === null ? [] : [[o.x-4, y-4, o.x+4, y+4]]; }
   return [];
 }
+const bossBox = () => { const B = BOSSES[boss.kind], bx = camX + boss.bx; return [bx + B.box[0], boss.y + B.box[1], bx + B.box[2], boss.y + B.box[3]]; };
 const planeBoxes = (x, y) => [[x-13, y-2, x+14, y+4], [x-4, y-9, x+10, y-7]];
 const planePoints = (x, y) => [[x-12,y+4],[x,y+4],[x+12,y+3],[x+15,y],[x+2,y+10],[x-4,y-8],[x+10,y-8]];
 const hit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
-const HIT_WHY = { star:'star', bird:'passaro', bat:'morcego', bal:'balao', bolt:'raio' };
+const HIT_WHY = { star:'star', bird:'passaro', bat:'morcego', bal:'balao', bolt:'raio', kite:'pipa', heli:'helicoptero', lava:'lava', bomb:'bomba', shot:'tiro' };
 function collide(x, y, withStars){
-  if (y + 10 >= GY && x >= RUNWAY - 14 && !onAirport(x)) return { why:'chao' };
-  for (const [px, py] of planePoints(x, y)) if (py >= mtnTop(px)) return { why: caveOf(px) ? 'caverna' : 'montanha' };
+  if (y + 10 >= GY && x >= RUNWAY - 14 && !onAirport(x)) return { why: seaAt(x) ? 'mar' : 'chao' };
+  for (const [px, py] of planePoints(x, y)) if (py >= mtnTop(px)) return { why: solidWhy(px) };
   for (const [px, py] of [[x-4,y-9],[x+10,y-9],[x+15,y-2],[x-13,y-6]]) if (py <= ceilAt(px)) return { why:'caverna' };
   const pb = planeBoxes(x, y);
   for (const o of obs){
-    if (o.dead || o.k === 'mtn' || o.k === 'cave' || (o.k === 'star' && !withStars)) continue;
+    if (o.dead || o.k === 'mtn' || o.k === 'cave' || ((o.k === 'star' || o.k === 'rocket') && !withStars)) continue;
     if (boxes(o).some(b => pb.some(a => hit(a, b)))) return { why: HIT_WHY[o.k], o };
   }
+  if (boss && boss.state === 'fight' && pb.some(a => hit(a, bossBox()))) return { why:'chefao' };
   return null;
 }
 
@@ -685,9 +877,12 @@ function feathers(x, y){ for (let i = 0; i < 12; i++){ const l = rand(1, 1.8); p
 function sparkle(x, y){ for (let i = 0; i < 14; i++){ const a = i / 14 * Math.PI * 2, l = rand(0.3, 0.5); parts.push({ k:'spark', x, y, vx: Math.cos(a)*55, vy: Math.sin(a)*55, life: l, max: l }); } }
 const FIRE = (f) => f > 0.78 ? '#ffffff' : f > 0.58 ? '#fff27a' : f > 0.38 ? '#ffb02e' : f > 0.2 ? '#ff5a2a' : '#8a2b2b';
 function blowObstacle(o){
-  if (!o || o.k === 'bolt') return; o.dead = true;
+  if (!o || o.k === 'bolt' || o.k === 'lava') return; o.dead = true;
   if (o.k === 'bird' || o.k === 'bat') feathers(o.x, o.y);
   if (o.k === 'bal'){ const b = BALLOONS[o.pal]; explode(o.x, o.y - 3, [b.R, b.Y, b.R], 0.6); }
+  if (o.k === 'kite') explode(o.x, o.y, ['#ffffff', '#1b1626'], 0.3);
+  if (o.k === 'heli') explode(o.x, o.y, ['#e8b030', '#9fe3ff', '#1b1626'], 0.6);
+  if (o.k === 'bomb' || o.k === 'shot') explode(o.x, o.y, ['#ffcc3a', '#ff5a2a', '#2e2a3c'], 0.3);
 }
 
 function confetti(){
@@ -697,10 +892,11 @@ function confetti(){
 }
 // modo fácil: o avião não explode, só leva um susto, pisca e continua
 function bump(why, o){
-  blowObstacle(o);
-  if (why === 'chao') P.y = Math.min(P.y, GY - 18);
-  if (why === 'montanha' || why === 'caverna') P.y = Math.min(P.y, mtnTop(P.x + 8) - 18);
-  if (why === 'chao' || why === 'montanha' || why === 'caverna') P.vy = -70;
+  blowObstacle(o); hitsTaken++;
+  if (!o){   // bateu em algo sólido (chão, mar, montanha, prédio, navio): o avião é empurrado para cima
+    const top = Math.min(why === 'chao' || why === 'mar' ? GY : Infinity, mtnTop(P.x + 8), mtnTop(P.x - 8));
+    P.y = Math.min(P.y, top - 18); P.vy = -70;
+  }
   invuln = 1.6; shake = 0.25; Snd.bump();
   for (let i = 0; i < 10; i++){ const l = rand(0.4, 0.8); parts.push({ k:'smoke', x: P.x, y: P.y, vx: rand(-30, 30), vy: rand(-30, 10), life: l, max: l }); }
   showBanner('OPA!', 'CONTINUE VOANDO');
@@ -789,19 +985,124 @@ function goAround(){
   speed = Math.max(speed, 70); invuln = 1.5; land.touched = false; land.bounced = false; flash = 0.12;
   showBanner('ARREMETER!', 'VAMOS TENTAR DE NOVO'); Snd.tone(440, 0.2, 'triangle', 0.14, 0, 660);
 }
+
+/* ---------- chefão: foguetes pegos no caminho são lançados nele ---------- */
+function spawnBoss(){
+  const B = BOSSES[run.ph.boss], hp = EASY ? B.easyHp : B.hp;
+  boss = { kind: run.ph.boss, hp, max: hp, bx: VW + 80, y: 60, t: 0, atk: 2.6, pat: 0, rocketT: 1.2, hitT: 0, state: 'enter', dieT: 0, boomT: 0, warn: null };
+  saveCheckpoint({ x: P.x });   // se os aviões acabarem na luta, volta para o começo dela
+  showBanner('CHEFÃO!', B.name); Snd.tone(110, 0.6, 'sawtooth', 0.14, 0, 220); Snd.tone(165, 0.6, 'sawtooth', 0.1, 0.3, 330);
+}
+function bossShoot(y, vy){
+  const B = BOSSES[boss.kind], bx = camX + boss.bx;
+  obs.push({ k:'shot', x: bx + B.mouth[0], y: y === undefined ? boss.y + B.mouth[1] : y, vx: speed - (EASY ? 90 : 150), vy: vy || 0, fire: boss.kind === 'dragon', w: 8 });
+  Snd.boom(0.22);
+}
+function bossAttack(){
+  const b = boss, bx = camX + b.bx; b.pat++;
+  if (b.kind === 'zep'){
+    if (b.pat % 2){   // barris caindo
+      const n = EASY ? 1 : 2 + (b.hp <= 2 ? 1 : 0);
+      for (let i = 0; i < n; i++) obs.push({ k:'bomb', x: bx - 6 + i * 14, y: b.y + 18, vx: speed - 35 - i * 12, vy: -10 * i, w: 8 });
+      Snd.tone(300, 0.15, 'square', 0.1, 0, 150);
+    } else b.warn = { y: clamp(P.y, 22, GY - 22), t: EASY ? 1.2 : 0.85 };   // tiro de canhão mirado, com aviso
+  } else {
+    const p = b.pat % 3;
+    if (p === 1){ if (EASY) bossShoot(); else for (const vy of [-50, 0, 50]) bossShoot(undefined, vy); }   // leque de fogo
+    else if (p === 2) b.warn = { y: clamp(P.y, 22, GY - 22), t: EASY ? 1.2 : 0.8 };
+    else for (let i = 0; i < (EASY ? 1 : 3); i++) obs.push({ k:'bomb', fire: true, x: camX + rand(140, VW - 20), y: -6, vx: speed - 20, vy: 20, w: 8 });   // brasas do céu
+  }
+}
+function updateBoss(dt){
+  const b = boss; b.t += dt; b.hitT = Math.max(0, b.hitT - dt);
+  if (b.state === 'enter'){
+    b.bx += (VW - 60 - b.bx) * Math.min(1, dt*1.6); b.y += (60 - b.y) * Math.min(1, dt*2);
+    if (b.bx < VW - 56) b.state = 'fight';
+    return;
+  }
+  if (b.state === 'fight'){
+    b.y = 62 + Math.sin(b.t * 0.8) * 28 + (b.kind === 'dragon' ? Math.sin(b.t * 2.1) * 6 : 0);
+    b.bx = VW - 60 + Math.sin(b.t * 0.5) * 10;
+    b.rocketT -= dt;
+    if (b.rocketT <= 0){ b.rocketT = EASY ? 2.2 : 3.2; const by = rand(30, GY - 40); obs.push({ k:'rocket', x: camX + VW + 14, by, y: by, ph: rand(0, 6) }); }
+    if (b.warn){ b.warn.t -= dt; if (b.warn.t <= 0){ bossShoot(b.warn.y); b.warn = null; } }
+    b.atk -= dt;
+    if (b.atk <= 0){ const rage = 1 - b.hp / b.max; b.atk = (EASY ? 3.6 : 2.3) - rage * (EASY ? 0.5 : 0.9); bossAttack(); }
+    return;
+  }
+  // derrotado: explosões em sequência enquanto cai
+  b.dieT += dt; b.y += 22 * dt; b.boomT -= dt;
+  if (b.boomT <= 0){ b.boomT = 0.16; explode(camX + b.bx + rand(-26, 26), b.y + rand(-10, 10), ['#ffcc3a', '#e8433a', '#ffffff', '#9aa0b8'], 0.35); Snd.boom(0.3); shake = 0.2; }
+  if (b.dieT > 2.2){
+    boss = null; bossDone = true; run.air = Math.round(P.x + 1500); land.warned = false;
+    confetti(); Snd.fanfare(); showBanner('VITÓRIA!', 'AGORA POUSE NO AEROPORTO');
+  }
+}
+function hitBoss(){
+  const b = boss; if (!b || b.state !== 'fight') return;
+  b.hp--; b.hitT = 0.4; shake = 0.3;
+  explode(camX + b.bx + rand(-12, 12), b.y + rand(-6, 6), ['#ffcc3a', '#ff5a2a', '#ffffff'], 0.4); Snd.boom(0.5);
+  if (b.hp <= 0){
+    b.state = 'dying'; b.warn = null; flash = 0.15; showBanner('CHEFÃO DERROTADO!', '');
+    for (const o of obs) if (o.k === 'bomb' || o.k === 'shot' || o.k === 'rocket') o.dead = true;
+  } else showBanner('ACERTOU!', b.hp === 1 ? 'FALTA 1 GOLPE' : 'FALTAM ' + b.hp + ' GOLPES');
+}
+function fireMissile(){ missiles.push({ x: P.x + 12, y: P.y, vx: speed + 80, vy: -30, t: 0 }); Snd.tone(500, 0.25, 'square', 0.12, 0, 1400); }
+function updateMissiles(dt){
+  for (const m of missiles){
+    m.t += dt;
+    const tx = boss ? camX + boss.bx : m.x + 300, ty = boss ? boss.y : m.y;
+    const a = Math.atan2(ty - m.y, tx - m.x), sp = speed + 230;
+    m.vx += (Math.cos(a) * sp - m.vx) * Math.min(1, dt*5); m.vy += (Math.sin(a) * sp - m.vy) * Math.min(1, dt*5);
+    m.x += m.vx * dt; m.y += m.vy * dt;
+    if (Math.random() < 0.8) parts.push({ k:'fire', x: m.x - 3, y: m.y, vx: -20, vy: rand(-8, 8), life: 0.25, max: 0.25, size: 1 });
+    if (boss && boss.state === 'fight' && Math.hypot(tx - m.x, ty - m.y) < 16){ m.done = true; hitBoss(); }
+    if (m.t > 3) m.done = true;
+  }
+  missiles = missiles.filter(m => !m.done);
+}
+
+/* ---------- marcadores de progressão ---------- */
+const clone = (v) => { try { return structuredClone(v); } catch(e){ return JSON.parse(JSON.stringify(v)); } };
+function saveCheckpoint(c){
+  snap = { x: Math.round(c.x), nextSpawn, caveSeen, lastCaveEnd, stars, starTotal, caves, saves, bossDone, sandT,
+    obs: clone(obs.filter(o => !o.dead && o.x + (o.w || 20) > c.x - 160 && o.k !== 'bomb' && o.k !== 'shot' && o.k !== 'rocket')),
+    taken: cps.map(q => q.taken), boss: boss ? clone(boss) : null };
+  if (snap.boss) snap.boss.warn = null;
+}
+function continueFromCheckpoint(){
+  const s = snap; if (!s) return;
+  Snd.init(); paused = false;
+  obs = clone(s.obs); nextSpawn = s.nextSpawn; caveSeen = s.caveSeen; lastCaveEnd = s.lastCaveEnd;
+  stars = s.stars; starTotal = s.starTotal; caves = s.caves; saves = s.saves; cps.forEach((q, i) => { q.taken = !!s.taken[i]; });
+  boss = s.boss ? clone(s.boss) : null; bossDone = s.bossDone; sandT = s.sandT; sandK = 0;
+  parts = []; weather = []; decor = []; missiles = []; pilot = null; ghost = null;
+  P.x = s.x + 4; P.vy = 0; P.ang = 0; P.ground = false; P.alive = true;
+  const cave = caveOf(P.x + 20);
+  P.y = cave ? caveCenter(cave, P.x + 20) : clamp(Math.min(64, mtnTop(P.x) - 30, mtnTop(P.x + 40) - 30), 20, GY - 30);
+  obs = obs.filter(o => !(boxes(o).length && o.k !== 'star' && o.x > P.x - 30 && o.x < P.x + 110));   // nada colado no avião
+  speed = 74; invuln = 2.5; lives = LIVES; flyT = 99; odo = P.x - START_X; camX = P.x - 100; mode = 'fly';
+  land = { touched: false, perfect: false, bounced: false, warned: run.air - P.x < 1300, t: 0 };
+  shake = 0; flash = 0; lastHud = ''; lastHint = '';
+  showLayer(null); $('hud').hidden = false; $('pad').hidden = false; renderLives();
+  showBanner('CONTINUANDO', 'DO MARCADOR');
+}
 const STAR_SVG = (on) => '<svg class="' + (on ? 'on' : '') + '" viewBox="0 0 7 7" aria-hidden="true"><path fill="' + (on ? '#ffcc3a' : '#3a3450') +
   '" d="M3 0h1v1h1v1h2v2h-1v3h-2v-1h-1v1h-2v-3h-1v-2h2v-1h1z"/></svg>';
 function phaseComplete(){
   mode = 'won'; releaseAll(); setHint('', false);
-  const need = Math.ceil(starTotal * (EASY ? 0.4 : 0.6)), okStars = stars >= need;
+  const need = Math.ceil(starTotal * (EASY ? 0.4 : 0.6));
+  // no chefão a 2ª estrela é não perder avião (no fácil: no máximo 2 sustos)
+  const okStars = run.ph.boss ? (EASY ? hitsTaken <= 2 : lives === LIVES) : stars >= need;
   const got = [true, okStars, land.perfect], n = got.filter(Boolean).length;
   const prog = pget('stars', {});
   if (n > (prog[run.ph.id] || 0)){ prog[run.ph.id] = n; pset('stars', prog); }
   $('winTitle').textContent = n === 3 ? 'PERFEITO!' : run.ph.name + ' COMPLETA!';
   const ws = $('winStars'); ws.innerHTML = [0, 1, 2].map(i => STAR_SVG(i < n)).join(''); ws.setAttribute('aria-label', n + ' de 3 estrelas');
   const items = [
-    [true, 'Chegou ao aeroporto'],
-    [okStars, 'Pegou ' + stars + ' estrelas' + (okStars ? '' : ' (precisava de ' + need + ')')],
+    [true, run.ph.boss ? 'Derrotou o chefão e chegou ao aeroporto' : 'Chegou ao aeroporto'],
+    run.ph.boss ? [okStars, EASY ? 'Quase sem sustos' : 'Sem perder nenhum avião']
+      : [okStars, 'Pegou ' + stars + ' estrelas' + (okStars ? '' : ' (precisava de ' + need + ')')],
     [land.perfect, land.perfect ? 'Pouso perfeito' : 'Pouso perfeito: desça devagar pela linha verde'],
   ];
   $('winChecks').innerHTML = '';
@@ -844,13 +1145,14 @@ function update(dt){
       if (Math.abs(iy) < 0.15) tv = 12 + (1 - auth) * 45;
       else tv = iy < 0 ? iy * 105 * auth : iy * 115;
       if (run.ph && run.ph.storm && !EASY) tv += 9;                  // vento da chuva empurra para baixo
+      const gu = gustAt(P.x); if (gu) tv += gu.dir * (EASY ? 26 : 60); // rajada de vento: sobe ou desce
       P.vy += (tv - P.vy) * Math.min(1, dt*4);
       P.y += P.vy * dt;
       if (P.y < 14){ P.y = 14; if (P.vy < 0) P.vy = 0; }
       if (P.y + 10 >= GY){
         if (P.x < RUNWAY - 14 && P.vy < 95){ P.y = GY - 10; P.vy = 0; P.ground = true; }
         else if (land && onAirport(P.x)) touchdown();
-        else crash('chao');
+        else crash(seaAt(P.x) ? 'mar' : 'chao');
       }
       if (land && mode === 'fly' && !P.ground && P.x > run.air + AIR_LEN - 90) goAround();
     }
@@ -859,11 +1161,18 @@ function update(dt){
     camX = P.x - 100;
     if (mode === 'fly'){ flyT += dt; invuln = Math.max(0, invuln - dt); }
     spawn();
+    // marcadores de progressão
+    if (mode === 'fly') for (const c of cps) if (!c.taken && P.x > c.x){ c.taken = true; saveCheckpoint(c); showBanner('MARCADOR!', 'SE BATER, VOLTA DAQUI'); Snd.season(); }
+    // chefão entra depois da decolagem
+    if (run.ph && run.ph.boss && !boss && !bossDone && mode === 'fly' && P.x > RUNWAY + 300) spawnBoss();
 
     if (mode === 'fly' || mode === 'takeoff'){
-      // estrelas sempre podem ser pegas
+      // estrelas e foguetes sempre podem ser pegos
       const pb = planeBoxes(P.x, P.y);
-      for (const o of obs) if (o.k === 'star' && !o.dead && boxes(o).some(b => pb.some(a => hit(a, b)))){ o.dead = true; stars++; sparkle(o.x, o.y); Snd.star(); }
+      for (const o of obs) if ((o.k === 'star' || o.k === 'rocket') && !o.dead && boxes(o).some(b => pb.some(a => hit(a, b)))){
+        o.dead = true; sparkle(o.x, o.y);
+        if (o.k === 'rocket') fireMissile(); else { stars++; Snd.star(); }
+      }
       if (invuln <= 0){
         const c = collide(P.x, P.y, false);
         if (c && !(c.why === 'chao' && P.ground)) crash(c.why, c.o);
@@ -905,6 +1214,14 @@ function update(dt){
   }
   // relâmpagos ao longe na chuva
   if (run.ph && run.ph.storm && playing && Math.random() < dt*0.12){ flash = Math.max(flash, 0.06); Snd.boom(0.18); }
+  // tempestade de areia no deserto: a cada 18 s, com aviso antes (nunca no pouso)
+  if (inPhase() && run.ph.sand && playing){
+    sandT += dt; const c = sandT % 18, cyc = Math.floor(sandT / 18), calm = inApproach();
+    if (c > 10.5 && sandWarned !== cyc && !calm){ sandWarned = cyc; showBanner('TEMPESTADE DE AREIA!', EASY ? 'SEGURA FIRME!' : 'LEMBRE DO CAMINHO'); }
+    sandK += ((c > 12 && c < 17 && !calm ? 1 : 0) - sandK) * Math.min(1, dt * 1.5);
+  } else sandK = Math.max(0, sandK - dt);
+  if (boss && (playing || mode === 'boom')) updateBoss(dt);
+  updateMissiles(dt);
 
   for (const o of obs){
     if (o.k === 'bird'){ o.x -= 22*dt; o.y = o.by + Math.sin(t*5 + o.ph) * 3; }
@@ -915,6 +1232,21 @@ function update(dt){
     } else if (o.k === 'bolt'){
       if (o.t < 0 && o.x - camX < VW - 30) o.t = 0;   // começa a piscar quando aparece na tela
       if (o.t >= 0){ o.t += dt; const on = boltOn(o); if (on && !o.was){ flash = Math.max(flash, 0.05); Snd.boom(0.35); } o.was = on; }
+    } else if (o.k === 'kite'){ o.y = o.by + Math.sin(t*1.3 + o.ph) * 9; o.x += Math.sin(t*0.9 + o.ph) * 6 * dt; }
+    else if (o.k === 'heli'){ o.x -= 10*dt; o.y = o.by + Math.sin(t*1.4 + o.ph) * 18; }
+    else if (o.k === 'rocket'){ o.y = o.by + Math.sin(t*3 + o.ph) * 3; }
+    else if (o.k === 'lava'){
+      if (o.t < 0 && o.x - camX < VW + 30) o.t = 0;
+      if (o.t >= 0){ o.t += dt; const up = lavaY(o) !== null; if (up && !o.was && o.x - camX < VW){ Snd.boom(0.15); } o.was = up;
+        if (up && Math.random() < 0.6) parts.push({ k:'fire', x: o.x + rand(-2, 2), y: lavaY(o) + 3, vx: rand(-10, 10), vy: rand(5, 20), life: 0.3, max: 0.3, size: 2 }); }
+    } else if (o.k === 'bomb'){
+      o.vy = Math.min(o.vy + 120*dt, 150); o.x += o.vx * dt; o.y += o.vy * dt;
+      if (o.fire && Math.random() < 0.5) parts.push({ k:'fire', x: o.x, y: o.y - 2, vx: rand(-6, 6), vy: -10, life: 0.3, max: 0.3, size: 1 });
+      if (o.y > Math.min(GY, mtnTop(o.x)) - 2){ o.dead = true; explode(o.x, o.y, ['#ffcc3a', '#ff5a2a', '#2e2a3c'], 0.25); }
+    } else if (o.k === 'shot'){
+      o.x += o.vx * dt; o.y += o.vy * dt;
+      if (o.fire && Math.random() < 0.7) parts.push({ k:'fire', x: o.x + 3, y: o.y + rand(-1, 1), vx: 30, vy: rand(-6, 6), life: 0.3, max: 0.3, size: 2 });
+      if (o.x < camX - 30 || o.y < -10 || o.y > GY) o.dead = true;
     }
   }
   obs = obs.filter(o => !o.dead && o.x + (o.w || 20) > camX - 40);
@@ -939,7 +1271,7 @@ function update(dt){
 let seasonW = [1, 0, 0, 0], nightW = 0, duskW = 0;
 function computeSeason(){
   if (inPhase()){   // cada fase tem uma estação fixa
-    const i = run.ph.season, s = SEASONS[i], o = { snow: s.snow, i };
+    const i = run.ph.season, s = SEASONS[i], o = { snow: s.snow, i, cactus: s.cactus, city: s.city, lava: s.lava };
     for (const key of SKEYS) o[key] = s[key];
     seasonW = [0, 0, 0, 0]; seasonW[i] = 1; SE = o; return;
   }
@@ -966,14 +1298,24 @@ function updateWeather(dt){
     add(7 * seasonW[1], () => ({ k:'leaf', x: rand(0, VW + 80), y: -3, vx: -rand(6, 16), vy: rand(10, 20), ph: rand(0,6), c: ['#e8933a','#c8502a','#f2c14e'][(Math.random()*3)|0] }));
     add(9 * seasonW[3] * (storm ? 0 : 1), () => ({ k:'petal', x: rand(0, VW + 80), y: -3, vx: -rand(6, 14), vy: rand(9, 18), ph: rand(0,6), c: Math.random() < 0.5 ? '#ffc6dc' : '#f39ac0' }));
     add(5 * seasonW[0] * nightW, () => ({ k:'fly', x: rand(0, VW), y: rand(GY - 70, GY - 6), vx: rand(-6, 6), vy: rand(-4, 4), ph: rand(0,6), life: rand(2, 4) }));
+    if (inPhase()){
+      const ph = run.ph;
+      if (ph.wind) add(22, () => ({ k:'wind', x: VW + 10, y: rand(6, GY - 10), vx: -rand(120, 180), vy: rand(-4, 4) }));
+      if (sandK > 0.15) add(160 * sandK, () => ({ k:'sand', x: VW + 10, y: rand(0, GY), vx: -rand(170, 250), vy: rand(-6, 6) }));
+      if (ph.volcano){
+        add(24, () => ({ k:'ash', x: rand(0, VW + 60), y: -2, vx: -rand(2, 8), vy: rand(8, 18), ph: rand(0, 6) }));
+        add(7, () => ({ k:'ember', x: rand(0, VW + 40), y: GY - 1, vx: -rand(0, 10), vy: -rand(16, 40), life: rand(2, 4) }));
+      }
+    }
   }
   for (const w of weather){
     w.x += (w.vx - sp * (w.k === 'fly' ? 0.6 : 0.35)) * dt; w.y += w.vy * dt;
     if (w.k === 'leaf' || w.k === 'petal') w.x += Math.sin(t*3 + w.ph) * 14 * dt;
-    if (w.k === 'snow') w.x += Math.sin(t*2 + w.ph) * 6 * dt;
+    if (w.k === 'snow' || w.k === 'ash') w.x += Math.sin(t*2 + w.ph) * 6 * dt;
     if (w.k === 'fly'){ w.life -= dt; w.vy = Math.sin(t*2 + w.ph) * 6; }
+    if (w.k === 'ember') w.life -= dt;
   }
-  weather = weather.filter(w => w.y < GY + 2 && w.x > -10 && (w.k !== 'fly' || w.life > 0));
+  weather = weather.filter(w => w.y < GY + 2 && w.x > -10 && ((w.k !== 'fly' && w.k !== 'ember') || w.life > 0));
 }
 
 /* ---------- desenho ---------- */
@@ -987,6 +1329,11 @@ function drawClouds(par){
 }
 function drawSkyAndSpace(){
   if (inPhase() && run.ph.storm){ ctx.drawImage(skies.storm, 0, 0); return; }
+  if (inPhase() && run.ph.skyPal){
+    ctx.drawImage(skies[run.ph.skyPal], 0, 0);
+    if (run.ph.skyPal === 'desert') ctx.drawImage(SUN, Math.round(VW * 0.72), 18);
+    return;
+  }
   ctx.drawImage(skies.day, 0, 0);
   if (duskW > 0.01){ ctx.globalAlpha = duskW; ctx.drawImage(skies.dusk, 0, 0); }
   if (nightW > 0.01){ ctx.globalAlpha = nightW; ctx.drawImage(skies.night, 0, 0); }
@@ -1040,10 +1387,22 @@ function drawHangar(x){
   ctx.fillStyle = '#2e2a3c'; ctx.fillRect(x+8, GY-17, 32, 17);
   if (SE.snow > 0.5){ ctx.fillStyle = '#ffffff'; ctx.fillRect(x-3, GY-29, 54, 1); }
 }
+// ilha (torre) do porta-aviões
+function drawIsland(x, lightsPass){
+  if (x < -30 || x > VW + 10) return;
+  if (lightsPass){ ctx.fillStyle = Math.floor(t*2) % 2 ? '#ff5a2a' : '#5a1a1a'; ctx.fillRect(x + 9, GY - 37, 2, 2); return; }
+  ctx.fillStyle = '#1b1626'; ctx.fillRect(x - 1, GY - 26, 22, 26);
+  ctx.fillStyle = '#7a8090'; ctx.fillRect(x, GY - 25, 20, 25);
+  ctx.fillStyle = '#9fe3ff'; ctx.fillRect(x + 2, GY - 21, 16, 3);
+  ctx.fillStyle = '#5a6070'; ctx.fillRect(x + 15, GY - 25, 5, 25);
+  ctx.fillStyle = '#1b1626'; ctx.fillRect(x + 9, GY - 35, 2, 9);
+  const r = Math.floor(t*3) % 2; ctx.fillRect(x + 5 + r*2, GY - 32, 10 - r*4, 1);   // radar girando
+}
 function drawScenery(cx, lightsPass){
-  const air = run.air < Infinity;
+  const air = run.air < Infinity, sea = inPhase() && run.ph.sea;
   drawTower(14 - cx, lightsPass);
-  if (air) drawTower(run.air + AIR_LEN + 26 - cx, lightsPass);
+  if (air && sea) drawIsland(run.air + AIR_LEN - 90 - cx, lightsPass);
+  else if (air) drawTower(run.air + AIR_LEN + 26 - cx, lightsPass);
   if (lightsPass){ if (air) drawAirportLights(cx); return; }
   drawSock(210 - cx);
   const x = RUNWAY - 6 - cx;   // fim da pista de decolagem
@@ -1051,7 +1410,28 @@ function drawScenery(cx, lightsPass){
     ctx.fillStyle = '#1b1626'; ctx.fillRect(x, GY-10, 1, 10); ctx.fillRect(x+7, GY-10, 1, 10);
     for (let i = 0; i < 4; i++){ ctx.fillStyle = i % 2 ? '#ffffff' : '#e8433a'; ctx.fillRect(x - 1 + i*2.5, GY-12, 3, 4); }
   }
-  if (air){ drawSock(run.air - 30 - cx); drawHangar(run.air + AIR_LEN + 48 - cx); }
+  if (air && !sea){ drawSock(run.air - 30 - cx); drawHangar(run.air + AIR_LEN + 48 - cx); }
+}
+// mar: tudo depois da praia é água, com ondas que andam
+function drawSea(cx){
+  const sx0 = Math.max(0, Math.ceil(RUNWAY + 140 - cx)); if (sx0 >= VW) return;
+  ctx.fillStyle = '#2a64b8'; ctx.fillRect(sx0, GY - 1, VW - sx0, VH - GY + 1);
+  ctx.fillStyle = '#1f4f96'; ctx.fillRect(sx0, GY + 6, VW - sx0, VH - GY - 6);
+  ctx.fillStyle = '#183f7c'; ctx.fillRect(sx0, GY + 14, VW - sx0, VH - GY - 14);
+  for (let x = sx0; x < VW; x++){
+    const h = hash(Math.floor(cx + x + t*14));
+    if (h % 7 === 0){ ctx.fillStyle = '#ffffff'; ctx.fillRect(x, GY - 1, 1, 1); }
+    if (h % 11 === 1){ ctx.fillStyle = '#5a9be8'; ctx.fillRect(x, GY + 2 + (h >>> 5) % 14, 2, 1); }
+  }
+  if (sx0 > 0){ ctx.fillStyle = '#ffffff'; ctx.fillRect(sx0, GY - 1, 2, 2); }
+}
+// casco do porta-aviões (o convés é a pista de chegada)
+function drawCarrier(cx){
+  const a = Math.round(run.air - 40 - cx), w = AIR_LEN + 90; if (a > VW || a + w < 0) return;
+  ctx.fillStyle = '#1b1626'; ctx.fillRect(a - 1, GY + 3, w + 2, 13);
+  ctx.fillStyle = '#5a6070'; ctx.fillRect(a, GY + 4, w, 11);
+  ctx.fillStyle = '#454a58'; ctx.fillRect(a, GY + 11, w, 4);
+  ctx.fillStyle = '#ffffff'; for (let i = 0; i < w; i += 9) if (hash(i + Math.floor(t*8)) % 3 === 0) ctx.fillRect(a + i, GY + 15, 3, 1);
 }
 function drawRunway(x0, len, cx){
   if (x0 - cx > VW + 20 || x0 + len - cx < -20) return;
@@ -1126,6 +1506,13 @@ function drawDarkness(cx){
   ctx.drawImage(darkC, -4, -4);
 }
 function drawTree(x, base){
+  if (SE.cactus){   // cacto com dois braços
+    ctx.fillStyle = SE.tree0; ctx.fillRect(x, base - 8, 2, 8); ctx.fillRect(x - 2, base - 6, 1, 3); ctx.fillRect(x - 2, base - 4, 2, 1);
+    ctx.fillRect(x + 3, base - 7, 1, 3); ctx.fillRect(x + 2, base - 5, 2, 1); ctx.fillStyle = SE.tree1; ctx.fillRect(x, base - 8, 1, 6); return;
+  }
+  if (SE.lava){   // árvore seca
+    ctx.fillStyle = SE.tree0; ctx.fillRect(x, base - 7, 1, 7); ctx.fillRect(x - 2, base - 6, 2, 1); ctx.fillRect(x + 1, base - 5, 2, 1); ctx.fillRect(x - 2, base - 8, 1, 2); return;
+  }
   ctx.fillStyle = '#5a3a22'; ctx.fillRect(x, base - 3, 1, 3);
   ctx.fillStyle = SE.tree0; ctx.fillRect(x - 2, base - 7, 5, 4); ctx.fillRect(x - 1, base - 8, 3, 1);
   ctx.fillStyle = SE.tree1; ctx.fillRect(x - 1, base - 7, 1, 1); ctx.fillRect(x + 1, base - 6, 1, 1);
@@ -1146,20 +1533,153 @@ function drawGround(cx){
     if (h % 31 === 0){ ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(x, GY + 8 + (h >>> 7) % (VH - GY - 11), 2, 1); }
   }
   drawRunway(0, RUNWAY, cx);
+  if (inPhase() && run.ph.sea){ drawSea(cx); if (run.air < Infinity) drawCarrier(cx); }
   if (run.air < Infinity) drawRunway(run.air, AIR_LEN, cx);
 }
 function drawMountain(m, cx){
   const half = m.w / 2, x0 = Math.max(Math.floor(m.x - half), cx), x1 = Math.min(Math.ceil(m.x + half), cx + VW);
   const depth = lerp(13, m.h * 0.7, SE.snow);
-  const snowLine = (m.h > 56 || SE.snow > 0.5) ? GY - (m.h - depth) : -1;
+  const snowLine = !SE.cactus && (m.h > 56 || SE.snow > 0.5) ? GY - (m.h - depth) : -1;   // deserto não tem neve
   for (let wx = x0; wx < x1; wx++){
     const hh = Math.round(mtnH(m, wx)); if (hh <= 0) continue;
     const top = GY - hh, sx = wx - cx;
     ctx.fillStyle = wx > m.x ? SE.mtn1 : SE.mtn0; ctx.fillRect(sx, top, 1, hh);
     const hs = hash(wx * 7 + m.seed);
     if (hs % 6 === 0 && hh > 10){ ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fillRect(sx, top + 4 + (hs >>> 6) % (hh - 6), 1, 2); }
-    if (top < snowLine){ ctx.fillStyle = wx > m.x ? '#dcdcf2' : '#f2f0ff'; ctx.fillRect(sx, top, 1, Math.min(hh, snowLine - top + (hs % 3))); }
+    if (SE.lava){   // vulcão: boca com lava no topo
+      if (m.h > 50 && hh > m.h - 9){ ctx.fillStyle = (hs + Math.floor(t*6)) % 3 ? '#ff5a2a' : '#ffb02e'; ctx.fillRect(sx, top, 1, Math.min(3, hh)); }
+    } else if (top < snowLine){ ctx.fillStyle = wx > m.x ? '#dcdcf2' : '#f2f0ff'; ctx.fillRect(sx, top, 1, Math.min(hh, snowLine - top + (hs % 3))); }
     ctx.fillStyle = '#2e2026'; ctx.fillRect(sx, top, 1, 1);
+  }
+}
+// cidade ao fundo: prédios em silhueta (par = paralaxe)
+function drawSkyline(par, hMin, hMax, col, colTop, seed, windows){
+  const off = Math.floor(camX * par);
+  for (let x = 0; x < VW; x++){
+    const wx = off + x, blk = Math.floor(wx / 14), inB = ((wx % 14) + 14) % 14;
+    if (inB >= 12) continue;
+    const h = hMin + hash(blk * 7 + seed) % (hMax - hMin);
+    ctx.fillStyle = col; ctx.fillRect(x, GY - h, 1, h);
+    ctx.fillStyle = colTop; ctx.fillRect(x, GY - h, 1, 1);
+    if (windows && inB % 3 === 1) for (let yy = GY - h + 3; yy < GY - 3; yy += 4){
+      ctx.fillStyle = hash(blk * 31 + yy + seed) % 3 === 0 ? '#ffd95c' : 'rgba(0,0,0,.25)'; ctx.fillRect(x, yy, 1, 2); }
+  }
+}
+// arco-íris ao fundo
+const RAINBOW_COLS = ['#e8433a', '#ff9a3c', '#ffd23f', '#3fa34d', '#3a7be8', '#8e4ad6'];
+function drawRainbow(){
+  const base = -((camX * 0.08) % 700);
+  ctx.globalAlpha = 0.6;
+  for (const c of [base + 220, base + 920]){
+    if (c - 150 > VW || c + 150 < 0) continue;
+    for (let x = Math.max(0, Math.floor(c - 150)); x < Math.min(VW, c + 150); x++){
+      const dx = x - c;
+      RAINBOW_COLS.forEach((col, i) => { const r = 148 - i * 5; if (Math.abs(dx) >= r) return;
+        ctx.fillStyle = col; ctx.fillRect(x, Math.round(GY - Math.sqrt(r*r - dx*dx) * 0.85), 1, 5); });
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+function drawBuilding(o, cx, lightsPass){
+  const x0 = Math.round(o.x - cx), top = Math.round(GY - o.h); if (x0 > VW + 4 || x0 + o.w < -4) return;
+  if (!lightsPass){
+    ctx.fillStyle = '#1b1626'; ctx.fillRect(x0 - 1, top - 3, o.w + 2, o.h + 3);
+    ctx.fillStyle = o.col; ctx.fillRect(x0, top, o.w, o.h);
+    ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fillRect(x0 + o.w - 4, top, 4, o.h);
+    ctx.fillStyle = '#2e2a3c'; ctx.fillRect(x0 - 1, top - 2, o.w + 2, 2);
+    if (o.seed % 3 === 0){ ctx.fillStyle = '#1b1626'; ctx.fillRect(x0 + (o.w >> 1), top - 10, 1, 8); }
+  } else if (o.seed % 3 === 0){ ctx.fillStyle = Math.floor(t*2) % 2 ? '#ff3b3b' : '#5a1a1a'; ctx.fillRect(x0 + (o.w >> 1), top - 11, 1, 1); }
+  for (let yy = top + 4; yy < GY - 6; yy += 6) for (let xx = 3; xx < o.w - 5; xx += 5){
+    const lit = hash(o.seed * 13 + xx * 7 + (yy - top) * 3) % 3 !== 0;
+    if (lightsPass){ if (lit){ ctx.fillStyle = '#ffd95c'; ctx.fillRect(x0 + xx, yy, 2, 3); } }
+    else { ctx.fillStyle = '#3a3f5a'; ctx.fillRect(x0 + xx, yy, 2, 3); }
+  }
+}
+function drawShip(o, cx){
+  const x0 = Math.round(o.x - cx); if (x0 > VW + 10 || x0 + o.w < -10) return;
+  const mt = Math.round(GY - o.mh), sb = GY - 24;
+  ctx.fillStyle = '#1b1626'; ctx.fillRect(x0 + 30, mt - 1, 5, GY - mt);
+  ctx.fillStyle = '#8b5a2b'; ctx.fillRect(x0 + 31, mt, 3, GY - mt);
+  for (let yy = mt + 10; yy < sb; yy++){ const k = (yy - mt - 10) / Math.max(1, sb - mt - 10), w = Math.round(4 + 9*k);
+    ctx.fillStyle = '#1b1626'; ctx.fillRect(x0 + 35, yy, w + 1, 1);
+    ctx.fillStyle = Math.abs(yy - (mt + sb) / 2) < 2 ? '#e8433a' : '#f4f4f8'; ctx.fillRect(x0 + 35, yy, w, 1); }
+  ctx.fillStyle = '#e8433a'; ctx.fillRect(x0 + 34, mt, 6, 3); ctx.fillRect(x0 + 40, mt + (Math.floor(t*4) % 2), 2, 2);
+  ctx.fillStyle = '#1b1626'; ctx.fillRect(x0 - 1, GY - 10, o.w + 2, 11);
+  ctx.fillStyle = '#a8222a'; ctx.fillRect(x0, GY - 9, o.w, 7);
+  ctx.fillStyle = '#f4ecd8'; ctx.fillRect(x0, GY - 9, o.w, 1);
+  ctx.fillStyle = '#ffd95c'; for (let i = 8; i < o.w - 4; i += 9) ctx.fillRect(x0 + i, GY - 6, 2, 2);
+}
+function drawGust(o, cx){
+  const x0 = Math.round(o.x - cx); if (x0 > VW || x0 + o.w < 0) return;
+  // azul = vento que sobe, laranja = vento que desce
+  ctx.fillStyle = o.dir < 0 ? 'rgba(120,210,255,.24)' : 'rgba(255,150,110,.24)'; ctx.fillRect(x0, 0, o.w, GY);
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  for (let y = 0; y < GY; y += 6){ ctx.fillRect(x0, y, 1, 3); ctx.fillRect(x0 + o.w - 1, y, 1, 3); }
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  for (let i = 0; i < 12; i++){ const lx = x0 + 6 + ((i * 37) % (o.w - 12)), ly = (((i * 53) + t * 90 * o.dir) % GY + GY) % GY; ctx.fillRect(lx, Math.round(ly), 1, 6); }
+  const ax = Math.round(x0 + o.w / 2), col = o.dir < 0 ? '#9fe3ff' : '#ffb02e';
+  for (let k = 0; k < 4; k++){   // setas grandes andando: ^ sobe, v desce
+    const ay = 22 + k * 36 + Math.round(((t * 30 * o.dir) % 12 + 12) % 12) - 6;
+    for (let j = 0; j < 7; j++){ const yy = o.dir < 0 ? ay + j : ay - j;
+      ctx.fillStyle = '#1b1626'; ctx.fillRect(ax - j - 1, yy - 1, 4, 4); ctx.fillRect(ax + j - 1, yy - 1, 4, 4); }
+    for (let j = 0; j < 7; j++){ const yy = o.dir < 0 ? ay + j : ay - j;
+      ctx.fillStyle = col; ctx.fillRect(ax - j, yy, 2, 2); ctx.fillRect(ax + j, yy, 2, 2); }
+  }
+}
+function drawLava(o, cx, lightsPass){
+  const sx = Math.round(o.x - cx); if (sx < -20 || sx > VW + 20) return;
+  const p = o.t < 0 ? 0 : o.t % LAVA_CYC, warn = o.t >= 0 && p < LAVA_WARN, y = lavaY(o);
+  if (!lightsPass){ ctx.fillStyle = '#1b1626'; ctx.fillRect(sx - 6, GY - 1, 13, 2); return; }
+  ctx.fillStyle = warn && Math.floor(t*10) % 2 ? '#ffb02e' : '#ff5a2a'; ctx.fillRect(sx - 5, GY - 1, 11, 1);
+  if (warn){ ctx.fillStyle = '#ffb02e'; const b = Math.floor(p * 12) % 4; ctx.fillRect(sx - 2 + b, GY - 3 - b, 1, 1); ctx.fillRect(sx + 2 - b, GY - 2 - b, 1, 1); }
+  if (y !== null){ const yy = Math.round(y);
+    ctx.fillStyle = '#ff5a2a'; ctx.fillRect(sx - 3, yy - 3, 7, 7);
+    ctx.fillStyle = '#ffb02e'; ctx.fillRect(sx - 2, yy - 2, 5, 5);
+    ctx.fillStyle = '#fff27a'; ctx.fillRect(sx - 1, yy - 1, 2, 2); }
+}
+function drawKite(o, cx){
+  const sx = Math.round(o.x - cx), sy = Math.round(o.y); if (sx < -20 || sx > VW + 20) return;
+  ctx.fillStyle = 'rgba(244,236,216,.55)';
+  for (let i = 0; i < 18; i++){ const f = i / 18; ctx.fillRect(Math.round(lerp(sx, sx - 40, f)), Math.round(lerp(sy + 4, GY, f)), 1, 1); }
+  ctx.drawImage(KITES[o.pal], sx - 4, sy - 4);
+  ctx.fillStyle = '#e8433a'; for (let i = 1; i < 4; i++) ctx.fillRect(sx - 1 + Math.round(Math.sin(t*5 + i) * 2), sy + 4 + i*3, 2, 1);
+}
+function drawBossAndShots(cx){
+  for (const o of obs){
+    const sx = Math.round(o.x - cx), sy = Math.round(o.y); if (sx < -20 || sx > VW + 20) continue;
+    if (o.k === 'bomb'){ if (o.fire){ ctx.fillStyle = '#ff5a2a'; ctx.fillRect(sx - 2, sy - 2, 5, 5); ctx.fillStyle = '#fff27a'; ctx.fillRect(sx - 1, sy - 1, 3, 3); }
+      else { ctx.drawImage(BARREL, sx - 2, sy - 3); ctx.fillStyle = Math.floor(t*12) % 2 ? '#fff27a' : '#ff5a2a'; ctx.fillRect(sx, sy - 5, 1, 2); } }
+    else if (o.k === 'shot'){ if (o.fire){ ctx.fillStyle = '#ff5a2a'; ctx.fillRect(sx - 3, sy - 3, 7, 7); ctx.fillStyle = '#ffb02e'; ctx.fillRect(sx - 2, sy - 2, 5, 5); ctx.fillStyle = '#fff6c8'; ctx.fillRect(sx - 1, sy - 1, 2, 2); }
+      else { ctx.fillStyle = '#1b1626'; ctx.fillRect(sx - 3, sy - 3, 7, 7); ctx.fillStyle = '#4a4858'; ctx.fillRect(sx - 2, sy - 2, 5, 5); ctx.fillStyle = '#b3aec6'; ctx.fillRect(sx - 1, sy - 1, 1, 1); } }
+    else if (o.k === 'rocket'){ ctx.drawImage(ROCKET, sx - 2, sy - 4);
+      if (Math.floor(t*10 + o.ph) % 2){ ctx.fillStyle = '#ffb02e'; ctx.fillRect(sx, sy + 4, 1, 2); }
+      ctx.fillStyle = 'rgba(255,240,160,.8)'; const a = t*5 + o.ph; ctx.fillRect(sx + Math.round(Math.cos(a) * 7), sy + Math.round(Math.sin(a) * 7), 1, 1); }
+  }
+  for (const m of missiles){ const sx = Math.round(m.x - cx), sy = Math.round(m.y);
+    ctx.fillStyle = '#1b1626'; ctx.fillRect(sx - 3, sy - 1, 7, 3); ctx.fillStyle = '#f4ecd8'; ctx.fillRect(sx - 2, sy, 4, 1); ctx.fillStyle = '#e8433a'; ctx.fillRect(sx + 2, sy, 2, 1); }
+  if (!boss) return;
+  const B = BOSSES[boss.kind], fr = B.frames.length > 1 ? Math.floor(t * 5) % 2 : 0;
+  const spr = boss.hitT > 0 && Math.floor(t * 20) % 2 ? B.flash[fr] : B.frames[fr];
+  const bx = Math.round(boss.bx), by = Math.round(boss.y);
+  ctx.drawImage(spr, bx - B.cx, by - B.cy);
+  if (boss.kind === 'zep'){ ctx.fillStyle = 'rgba(225,222,238,.85)'; const p = Math.floor(t * 20) % 2; ctx.fillRect(bx + 40, by - 13 + (p ? 3 : 0), 1, p ? 20 : 26); }
+  else if (boss.state === 'fight' && Math.floor(t * 6) % 3 === 0){ ctx.fillStyle = '#ffb02e'; ctx.fillRect(bx - 31, by - 5, 2, 1); }
+  if (boss.warn && Math.floor(t * 10) % 2){   // aviso do tiro: linha vermelha e "!"
+    const wy = Math.round(boss.warn.y); ctx.fillStyle = 'rgba(255,60,60,.55)';
+    for (let x = 0; x < bx - 30; x += 6) ctx.fillRect(x, wy, 3, 1);
+    ctx.fillStyle = '#ff3b3b'; ctx.fillRect(bx - 36, wy - 6, 2, 8); ctx.fillRect(bx - 36, wy + 4, 2, 2);
+  }
+}
+// marcadores: bandeira quadriculada no alto com uma linha até o chão (verde depois de passar)
+function drawCheckpoints(cx){
+  for (const c of cps){
+    const sx = Math.round(c.x - cx); if (sx < -12 || sx > VW + 4) continue;
+    ctx.fillStyle = c.taken ? 'rgba(125,255,138,.45)' : 'rgba(255,255,255,.45)';
+    for (let y = 16; y < GY; y += 4) ctx.fillRect(sx, y, 1, 2);
+    ctx.fillStyle = '#1b1626'; ctx.fillRect(sx - 1, 6, 2, 12); ctx.fillRect(sx, 6, 11, 8);
+    for (let yy = 0; yy < 3; yy++) for (let xx = 0; xx < 5; xx++){
+      ctx.fillStyle = c.taken ? ((xx + yy) % 2 ? '#7dff8a' : '#2f8a3a') : ((xx + yy) % 2 ? '#ffffff' : '#1b1626');
+      ctx.fillRect(sx + 1 + xx * 2, 7 + yy * 2 + (Math.floor(t*4 + xx) % 2 && xx > 2 ? 1 : 0), 2, 2); }
   }
 }
 function drawCave(o, cx, lightsPass){
@@ -1218,34 +1738,53 @@ function draw(){
   if (shake > 0){ const k = Math.min(1, shake*3); ox = Math.round(rand(-2, 2)*k); oy = Math.round(rand(-2, 2)*k); }
   ctx.translate(ox, oy);
 
-  // montanhas ao fundo
-  const fx = Math.floor(camX * 0.15), cap = 2 + Math.round(SE.snow * 6);
-  for (let x = 0; x < VW; x++){ const wx = fx + x; farH[x] = 26 + 32*vnoise(wx/55) + 10*vnoise(wx/14 + 7); }
-  ctx.fillStyle = SE.far; for (let x = 0; x < VW; x++) ctx.fillRect(x, GY - farH[x], 1, farH[x]);
-  ctx.fillStyle = SE.farTop; for (let x = 0; x < VW; x++) ctx.fillRect(x, GY - farH[x], 1, cap);
+  if (inPhase() && run.ph.rainbow) drawRainbow();
+  // montanhas ao fundo (na cidade, prédios em silhueta)
+  if (SE.city) drawSkyline(0.15, 30, 74, SE.far, SE.farTop, 5, false);
+  else {
+    const fx = Math.floor(camX * 0.15), cap = 2 + Math.round(SE.snow * 6);
+    for (let x = 0; x < VW; x++){ const wx = fx + x; farH[x] = 26 + 32*vnoise(wx/55) + 10*vnoise(wx/14 + 7); }
+    ctx.fillStyle = SE.far; for (let x = 0; x < VW; x++) ctx.fillRect(x, GY - farH[x], 1, farH[x]);
+    ctx.fillStyle = SE.farTop; for (let x = 0; x < VW; x++) ctx.fillRect(x, GY - farH[x], 1, cap);
+  }
   drawClouds(0.18);
-  // colinas com árvores
-  const hx = Math.floor(camX * 0.45);
-  for (let x = 0; x < VW; x++){ const wx = hx + x; hillH[x] = 9 + 16*vnoise(wx/38 + 3); }
-  ctx.fillStyle = SE.hill; for (let x = 0; x < VW; x++) ctx.fillRect(x, GY - hillH[x], 1, hillH[x]);
-  ctx.fillStyle = SE.hillTop; for (let x = 0; x < VW; x++) ctx.fillRect(x, GY - hillH[x], 1, 1);
-  for (let x = 2; x < VW - 2; x++){ const wx = hx + x; if (wx % 19 === 0 && hash(wx) % 3 !== 0) drawTree(x, Math.round(GY - hillH[x]) + 1); }
+  // colinas com árvores (na cidade, prédios mais perto com janelas)
+  if (SE.city) drawSkyline(0.45, 14, 44, SE.hill, SE.hillTop, 77, true);
+  else {
+    const hx = Math.floor(camX * 0.45);
+    for (let x = 0; x < VW; x++){ const wx = hx + x; hillH[x] = 9 + 16*vnoise(wx/38 + 3); }
+    ctx.fillStyle = SE.hill; for (let x = 0; x < VW; x++) ctx.fillRect(x, GY - hillH[x], 1, hillH[x]);
+    ctx.fillStyle = SE.hillTop; for (let x = 0; x < VW; x++) ctx.fillRect(x, GY - hillH[x], 1, 1);
+    for (let x = 2; x < VW - 2; x++){ const wx = hx + x; if (wx % 19 === 0 && hash(wx) % 3 !== 0) drawTree(x, Math.round(GY - hillH[x]) + 1); }
+  }
   drawClouds(0.5);
 
   const cx = Math.round(camX);
   drawScenery(cx, false);
   drawGround(cx);
-  for (const o of obs) if (o.k === 'mtn') drawMountain(o, cx); else if (o.k === 'cave') drawCave(o, cx, false);
+  for (const o of obs){
+    if (o.k === 'mtn') drawMountain(o, cx); else if (o.k === 'cave') drawCave(o, cx, false);
+    else if (o.k === 'bld') drawBuilding(o, cx, false); else if (o.k === 'ship') drawShip(o, cx);
+    else if (o.k === 'gust') drawGust(o, cx); else if (o.k === 'lava') drawLava(o, cx, false);
+  }
   for (const o of obs){
     if (o.k === 'bolt'){ drawBolt(o, cx, false); continue; }
+    if (o.k === 'kite'){ drawKite(o, cx); continue; }
     const sx = Math.round(o.x - cx), sy = Math.round(o.y);
     if (sx < -20 || sx > VW + 20) continue;
     if (o.k === 'bal') ctx.drawImage(BALLOONS[o.pal].spr, sx - 6, sy - 8);
     else if (o.k === 'bat') ctx.drawImage(BAT[Math.floor(t*12 + o.ph) % 2], sx - 4, sy - 2);
-    else if (o.k === 'bird') ctx.drawImage(BIRD[Math.floor(t*8 + o.ph) % 2], sx - 4, sy - 3);
+    else if (o.k === 'bird') ctx.drawImage((o.sp === 'vult' ? VULTURE : o.sp === 'gull' ? GULL : BIRD)[Math.floor(t*8 + o.ph) % 2], sx - 4, sy - 3);
+    else if (o.k === 'heli'){ ctx.drawImage(HELI, sx - 8, sy - 4); ctx.fillStyle = '#1b1626'; const r = Math.floor(t*24) % 2; ctx.fillRect(sx - 9 + (r ? 4 : 0), sy - 5, r ? 10 : 18, 1); }
     else if (o.k === 'star'){ const bob = Math.round(Math.sin(t*4 + o.ph)); ctx.drawImage(STAR, sx - 3, sy - 3 + bob); }
   }
+  drawBossAndShots(cx);
   drawDecor(cx);
+  if (sandK > 0.01){   // tempestade de areia: nuvem marrom que esconde o caminho, em faixas que se mexem
+    ctx.fillStyle = 'rgba(150,98,48,' + (sandK * (EASY ? 0.45 : 0.78)).toFixed(3) + ')'; ctx.fillRect(-4, -4, VW + 8, VH + 8);
+    ctx.fillStyle = 'rgba(232,190,120,' + (sandK * 0.35).toFixed(3) + ')';
+    for (let y = 0; y < GY; y += 12){ const off = Math.round(((t * 160 + y * 37) % (VW + 80))); ctx.fillRect(VW - off, y + Math.round(Math.sin(t*3 + y) * 2), 70, 5); }
+  }
   const pl = PLANES[sel];
   const iced = inPhase() && run.ph.ice;
   if (P.alive && !(invuln > 0 && Math.floor(t*10) % 2)) drawPlaneAt(pl.spr, P.x, P.y, P.ang, cx, mode !== 'menu' && mode !== 'won', iced);
@@ -1259,10 +1798,15 @@ function draw(){
   const night = inPhase() && run.ph.night;
   if (night) drawDarkness(cx);
   if (inPhase() && run.ph.storm){ ctx.fillStyle = 'rgba(28,34,58,.2)'; ctx.fillRect(-4, -4, VW + 8, VH + 8); }
+  if (inPhase() && run.ph.volcano){ ctx.fillStyle = 'rgba(120,24,10,.14)'; ctx.fillRect(-4, -4, VW + 8, VH + 8); }
 
   // o que brilha fica por cima da escuridão
   drawScenery(cx, true);
-  for (const o of obs) if (o.k === 'cave') drawCave(o, cx, true); else if (o.k === 'bolt') drawBolt(o, cx, true);
+  for (const o of obs){
+    if (o.k === 'cave') drawCave(o, cx, true); else if (o.k === 'bolt') drawBolt(o, cx, true);
+    else if (o.k === 'bld') drawBuilding(o, cx, true); else if (o.k === 'lava') drawLava(o, cx, true);
+  }
+  drawCheckpoints(cx);
   if (night){   // estrelas brilham e morcegos mostram os olhos vermelhos
     for (const o of obs){ const sx = Math.round(o.x - cx), sy = Math.round(o.y); if (sx < -10 || sx > VW + 10) continue;
       if (o.k === 'star'){ ctx.globalAlpha = 0.85; ctx.drawImage(STAR, sx - 3, sy - 3 + Math.round(Math.sin(t*4 + o.ph))); ctx.globalAlpha = 1; }
@@ -1281,6 +1825,10 @@ function draw(){
   for (const w of weather){
     if (w.k === 'snow'){ ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(w.x), Math.round(w.y), 1, 1); }
     else if (w.k === 'rain'){ ctx.fillStyle = 'rgba(190,212,255,.6)'; ctx.fillRect(Math.round(w.x), Math.round(w.y), 1, 3); }
+    else if (w.k === 'wind'){ ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fillRect(Math.round(w.x), Math.round(w.y), 6, 1); }
+    else if (w.k === 'sand'){ ctx.fillStyle = 'rgba(246,222,170,.8)'; ctx.fillRect(Math.round(w.x), Math.round(w.y), 4, 1); }
+    else if (w.k === 'ash'){ ctx.fillStyle = '#8a8090'; ctx.fillRect(Math.round(w.x), Math.round(w.y), 1, 1); }
+    else if (w.k === 'ember'){ ctx.fillStyle = Math.floor(t*8 + w.x) % 2 ? '#ffb02e' : '#ff5a2a'; ctx.fillRect(Math.round(w.x), Math.round(w.y), 1, 1); }
     else if (w.k === 'fly' && Math.sin(t*6 + w.ph) > 0){ ctx.fillStyle = '#f6ff7a'; ctx.fillRect(Math.round(w.x), Math.round(w.y), 1, 1); }
   }
   for (const p of parts){
@@ -1324,12 +1872,21 @@ function updateUI(){
   } else if (mode === 'fly' && land && !land.touched && P.x > run.air - 1000) setHint(approachHint(), false);
   else if (mode === 'fly' && flyT < 4) setHint(EASY ? 'ANALÓGICO:\nSOBE E DESCE' : 'B: SALTAR DE PARAQUEDAS\nANTES DE BATER', false);
   else setHint('', false);
-  const remain = run.ph ? Math.max(0, Math.ceil((run.air - P.x) / 4)) : 0;
-  const hud = (run.ph ? remain : meters()) + '|' + stars + '|' + SE.i;
+  const remain = run.ph && run.air < Infinity ? Math.max(0, Math.ceil((run.air - P.x) / 4)) : 0;
+  const fighting = run.ph && run.ph.boss && !bossDone;
+  const hud = (run.ph ? remain : meters()) + '|' + stars + '|' + SE.i + '|' + fighting;
   if (hud !== lastHud){
     lastHud = hud; $('starc').textContent = stars;
-    $('dist').textContent = !run.ph ? meters() + ' m' : remain > 0 ? 'FALTAM ' + remain + ' m' : 'AEROPORTO';
+    $('dist').textContent = !run.ph ? meters() + ' m' : fighting ? 'CHEFÃO' : remain > 0 ? 'FALTAM ' + remain + ' m' : 'AEROPORTO';
     $('season').textContent = run.ph ? run.ph.name : SEASONS[SE.i].name;
+  }
+  // barra de vida do chefão
+  const bar = $('bossBar'), showBar = !!boss && boss.state !== 'dying' && mode !== 'over' && mode !== 'won';
+  if (bar.hidden === showBar) bar.hidden = !showBar;
+  if (showBar){
+    const name = BOSSES[boss.kind].name, w = Math.round(100 * boss.hp / boss.max) + '%';
+    if ($('bossName').textContent !== name) $('bossName').textContent = name;
+    if ($('bossHp').style.width !== w) $('bossHp').style.width = w;
   }
   const live = (mode === 'takeoff' || mode === 'fly' || (mode === 'landed' && speed > 4)) && !paused && !rotBlock;
   Snd.engine(live, speed, gasOn());
@@ -1342,7 +1899,12 @@ const WHY = {
   chao: 'Você bateu no chão.', pista: 'A pista acabou antes da decolagem. Acelere com A e suba o analógico.',
   salvo: 'O piloto se salvou, mas os aviões acabaram.',
   caverna: 'Você bateu na parede da caverna sem saltar.', morcego: 'Você bateu num morcego sem saltar.',
-  raio: 'Um raio acertou o avião. Quando a nuvem piscar, espere o raio passar.'
+  raio: 'Um raio acertou o avião. Quando a nuvem piscar, espere o raio passar.',
+  mar: 'O avião caiu no mar.', predio: 'Você bateu num prédio sem saltar.', navio: 'Você bateu no mastro do navio sem saltar.',
+  pipa: 'Você bateu numa pipa sem saltar.', helicoptero: 'Você bateu num helicóptero sem saltar.',
+  lava: 'Uma bola de lava acertou o avião. Quando o chão brilhar, desvie.',
+  bomba: 'O chefão acertou o avião.', tiro: 'O tiro do chefão acertou o avião. Saia da linha vermelha.',
+  chefao: 'Você bateu no chefão. Pegue os foguetes de longe.'
 };
 function showOver(){
   mode = 'over';
@@ -1350,14 +1912,17 @@ function showOver(){
   const m = meters(), pts = m + stars*25 + saves*100 + caves*150, isBest = !run.ph && pts > best && pts > 0;
   $('oCaves').textContent = caves;
   if (isBest){ best = pts; pset('best', best); }
-  $('btnAgain').textContent = run.ph ? 'TENTAR DE NOVO' : 'VOAR DE NOVO';
+  const canCont = !!(run.ph && snap);   // há marcador salvo: dá para continuar dali
+  $('btnCont').hidden = !canCont;
+  $('btnAgain').textContent = !run.ph ? 'VOAR DE NOVO' : canCont ? 'DO COMEÇO' : 'TENTAR DE NOVO';
+  $('btnAgain').classList.toggle('ghost', canCont);
   $('overTitle').textContent = crashWhy === 'salvo' ? 'FIM DE VOO' : 'BUM!';
   $('overWhy').textContent = WHY[crashWhy] || 'Fim de voo.';
   $('oDist').textContent = m + ' m'; $('oStars').textContent = stars; $('oSaves').textContent = saves; $('oPts').textContent = pts; $('oBest').textContent = best;
   $('newBest').hidden = !isBest; $('bestMenu').textContent = best;
   $('hud').hidden = true; $('pad').hidden = true; $('overLayer').hidden = false;
   releaseAll();
-  setTimeout(() => $('btnAgain').focus({ preventScroll: true }), 50);
+  setTimeout(() => $(canCont ? 'btnCont' : 'btnAgain').focus({ preventScroll: true }), 50);
 }
 function resetWorld(){
   P.x = START_X; P.y = GY - 10; P.vy = 0; P.ang = 0; P.ground = true; P.alive = true;
@@ -1366,6 +1931,7 @@ function resetWorld(){
   nextSpawn = RUNWAY + 180; shake = 0; flash = 0; flyT = 0; dayT = 0; odo = 0; lastSeason = 0; pilot = null; ghost = null;
   lastHud = ''; lastHint = ''; releaseAll();
   starTotal = 0; land = run.ph ? { touched: false, perfect: false, bounced: false, warned: false, t: 0 } : null;
+  boss = null; bossDone = false; missiles = []; hitsTaken = 0; cps = []; snap = null; sandT = 0; sandK = 0; sandWarned = -1;
 }
 const LAYERS = ['menuLayer', 'mapLayer', 'overLayer', 'pauseLayer', 'winLayer'];
 const showLayer = (id) => LAYERS.forEach(l => { $(l).hidden = l !== id; });
@@ -1373,8 +1939,11 @@ const showLayer = (id) => LAYERS.forEach(l => { $(l).hidden = l !== id; });
 function startGame(idx){
   if (typeof idx !== 'number') idx = run.idx;
   const ph = idx >= 0 ? PHASES[idx] : null;
-  run = { ph, idx, air: ph ? START_X + Math.round(ph.len * (EASY ? 0.55 : 1)) * 4 : Infinity };
+  // no chefão o aeroporto só aparece depois da vitória
+  run = { ph, idx, air: ph && !ph.boss ? START_X + Math.round(ph.len * (EASY ? 0.55 : 1)) * 4 : Infinity };
   Snd.init(); resetWorld(); mode = 'takeoff'; paused = false;
+  // marcadores a 1/3 e 2/3 da fase (as cavernas ganham os seus quando aparecem)
+  if (ph && !ph.boss && !EASY) for (const f of [0.34, 0.67]) addCheckpoint(START_X + (run.air - START_X) * f);
   showLayer(null);
   $('hud').hidden = false; $('pad').hidden = false; $('pad').classList.toggle('easy', EASY); $('lives').hidden = EASY;
   renderLives();
@@ -1446,7 +2015,7 @@ function renderMap(){
   PHASES.forEach((ph, i) => {
     const open = i === 0 || (prog[PHASES[i - 1].id] || 0) > 0, got = prog[ph.id] || 0;
     const li = document.createElement('li'), b = document.createElement('button');
-    b.type = 'button'; b.className = 'node'; b.disabled = !open;
+    b.type = 'button'; b.className = ph.boss ? 'node boss' : 'node'; b.disabled = !open;
     if (open && !got && !nextSet){ b.classList.add('next'); nextSet = true; }
     const name = document.createElement('span'); name.textContent = (i + 1) + '. ' + ph.name;
     const st = document.createElement('span');
@@ -1464,6 +2033,7 @@ $('btnEasy').addEventListener('click', () => { EASY = !EASY; pset('easy', EASY);
 $('btnWho').addEventListener('click', toProfiles);
 $('btnFree').addEventListener('click', () => startGame(-1));
 $('btnAgain').addEventListener('click', () => startGame());
+$('btnCont').addEventListener('click', continueFromCheckpoint);
 $('btnMenu').addEventListener('click', toMap);
 $('btnNext').addEventListener('click', () => startGame(run.idx + 1));
 $('btnRetry').addEventListener('click', () => startGame());
@@ -1527,7 +2097,7 @@ function resize(){
   const scale = Math.min(w / VW, h / VH);
   cv.style.width = Math.floor(VW * scale) + 'px'; cv.style.height = Math.floor(VH * scale) + 'px';
   ctx.imageSmoothingEnabled = false;
-  skies.day = buildSky(SKY_DAY); skies.dusk = buildSky(SKY_DUSK); skies.night = buildSky(SKY_NIGHT); skies.storm = buildSky(SKY_STORM);
+  skies.day = buildSky(SKY_DAY); skies.dusk = buildSky(SKY_DUSK); skies.night = buildSky(SKY_NIGHT); skies.storm = buildSky(SKY_STORM); skies.desert = buildSky(SKY_DESERT); skies.volcano = buildSky(SKY_VOLCANO);
   rotBlock = h > w && matchMedia('(pointer:coarse)').matches;
   $('rotLayer').hidden = !rotBlock;
   if (rotBlock) releaseAll();
