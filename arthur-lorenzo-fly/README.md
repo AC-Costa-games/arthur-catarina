@@ -1,6 +1,6 @@
 # Arthur Lorenzo Fly
 
-Jogo 2D em pixel art para celular, jogado deitado. Um avião de asa parasol atravessa 12 fases (sol, chuva, neve, noite, ventania, deserto, mar, cidade, vulcão e arco-íris, mais dois chefões) desviando de pássaros, raios, prédios, lava e cavernas, e pousa num aeroporto no fim de cada fase.
+Jogo 2D em pixel art para celular, jogado deitado. Um avião atravessa 17 fases (do céu de sol até o espaço, com três chefões e três fases bônus) desviando de pássaros, raios, prédios, lava, meteoros e cavernas, e pousa num aeroporto no fim de cada fase. As estrelas pegas viram dinheiro para comprar aviões, rastros e melhorias no hangar.
 
 ![Menu do jogo](imagens/capturas/01-menu.png)
 
@@ -44,20 +44,38 @@ Na abertura, escolha quem vai voar: **Arthur** ou **Catarina**. Cada um tem seu 
 | 4. Noite | Escuro de verdade: **só o farol ilumina**. Morcegos e uma caverna. |
 | 5. ⚔ Dirigível Pirata | **Chefão.** Joga barris e dispara o canhão (uma linha vermelha avisa onde o tiro vai passar). |
 | 6. Ventania | Colunas de vento: **azul empurra para cima, laranja para baixo**. Pipas no céu. |
-| 7. Deserto | **Tempestade de areia** a cada 18 s (com aviso), urubus, cactos e uma caverna. |
-| 8. Mar | Tudo depois da praia é água. Navios com mastro, gaivotas e **pouso no porta-aviões**. |
-| 9. Cidade | Pôr do sol, **prédios** para passar por cima e helicópteros. |
-| 10. Vulcão | **O chão brilha antes da bola de lava subir.** Cinzas, brasas e uma caverna. |
-| 11. ⚔ Dragão de Fogo | **Chefão.** Leque de bolas de fogo, tiro mirado e brasas caindo do céu. |
-| 12. Arco-íris | **Fase bônus**, sem obstáculos: arcos de estrelas para pegar. |
+| 7. Floresta | **Árvores gigantes**, papagaios e um mar de pinheiros ao fundo. |
+| 8. ★ Chuva de Estrelas | **Fase bônus** à noite: estrelas caindo devagar; as **douradas valem 5**. |
+| 9. Deserto | **Tempestade de areia** a cada 18 s (com aviso), urubus, cactos e uma caverna. |
+| 10. Mar | Tudo depois da praia é água. Navios com mastro, gaivotas e **pouso no porta-aviões**. |
+| 11. Cidade | Pôr do sol, **prédios** para passar por cima e helicópteros. |
+| 12. Vulcão | **O chão brilha antes da bola de lava subir.** Cinzas, brasas e uma caverna. |
+| 13. ⚔ Dragão de Fogo | **Chefão.** Leque de bolas de fogo, tiro mirado e brasas caindo do céu. |
+| 14. ★ Arco-íris | **Fase bônus**, sem obstáculos: arcos de estrelas para pegar. |
+| 15. Apocalipse | Cidade em ruínas sob o céu vermelho. **Um X vermelho no chão avisa onde o meteoro vai cair.** |
+| 16. ★ Terra dos Doces | **Fase bônus** cor-de-rosa com pirulitos: **cada bala vale 3 estrelas**. |
+| 17. ⚔ Espaço | Última fase: o avião vira **ônibus espacial**. Planetas, meteoros e satélites; no fim, a **nave alienígena** (laser mirado, leque de plasma e bombas verdes) e o pouso na base da Lua. |
 
-**Chefões:** o avião não atira. Durante a luta aparecem **foguetes** no caminho; cada foguete que você pega é lançado no chefão. O Dirigível aguenta 5 golpes e o Dragão 6 (3 no modo fácil). Depois da vitória aparece o aeroporto. A 2ª estrela do chefão é vencer sem perder nenhum avião.
+**Chefões:** o avião não atira. Durante a luta aparecem **foguetes** no caminho; cada foguete que você pega é lançado no chefão. O Dirigível aguenta 5 golpes, o Dragão 6 e a Nave Alienígena 7 (todos 3 no modo fácil). Depois da vitória aparece o aeroporto. Nas fases só de chefão, a 2ª estrela é vencer sem perder nenhum avião.
 
 **Marcadores de progressão:** bandeiras quadriculadas no caminho, a 1/3 e 2/3 da fase, **logo antes de cada caverna e no meio dela**, e no começo da luta com o chefão. A bandeira fica verde quando você passa. Se os aviões acabarem, o botão **CONTINUAR DO MARCADOR** volta para a última bandeira, com 3 aviões de novo e as estrelas que você tinha ali.
 
 Cada fase termina num **aeroporto**. Perto dele, aparece uma **linha verde** até a pista: solte o A e desça por ela. As luzes ao lado da pista ficam brancas quando o avião está alto e vermelhas quando está baixo. Se passar da pista sem pousar, o avião arremete e tenta de novo.
 
 Estrelas de cada fase: ⭐ chegar ao aeroporto, ⭐ pegar 60% das estrelas do caminho (40% no fácil) e ⭐ pouso perfeito (tocar a pista devagar). Terminar uma fase libera a próxima. O **Voo livre** é o modo sem fim, com as estações mudando e cavernas.
+
+## Hangar (loja)
+
+Cada estrela pega em qualquer fase (ou no voo livre) vai para a carteira do jogador, que aparece no botão **HANGAR** do mapa. Para comprar, toque no item e **toque de novo para confirmar**. Itens comprados podem ser usados a qualquer hora.
+
+| Seção | Itens e preços |
+|---|---|
+| Aviões: clássicos | Vermelho, azul e amarelo (grátis) |
+| Aviões: países | Brasil, Argentina, EUA, Japão, França, Itália, Portugal e Alemanha (★ 40) |
+| Aviões: militares (caças) | Camuflado, Marinha e Deserto (★ 90), Noturno (★ 110) |
+| Aviões: futuristas (jatos) | Neon (★ 150), Cromado (★ 180), Galáxia (★ 220), Dourado (★ 300) |
+| Rastros | Arco-íris e Bolhas (★ 30), Corações (★ 40), Estrelinhas (★ 50), Fogo (★ 60) |
+| Melhorias | Ímã de estrelas (★ 120) e Avião extra: 4 aviões por fase (★ 150) |
 
 **Modo fácil** (pensado para 4 anos): só o analógico, sem botões. O avião acelera e decola sozinho, não explode (só pisca e segue), as fases têm 55% do tamanho e o pouso é feito pelo piloto automático.
 
