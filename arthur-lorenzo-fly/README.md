@@ -1,6 +1,6 @@
 # Arthur Lorenzo Fly
 
-Jogo 2D em pixel art para celular, jogado deitado. Um avião de asa parasol decola da pista e desvia de pássaros, balões, montanhas e cavernas. O cenário passa por dia e noite e pelas quatro estações.
+Jogo 2D em pixel art para celular, jogado deitado. Um avião de asa parasol decola, atravessa fases de sol, chuva, neve e noite desviando de pássaros, balões, raios, montanhas e cavernas, e pousa num aeroporto no fim de cada fase.
 
 ![Menu do jogo](imagens/capturas/01-menu.png)
 
@@ -31,6 +31,23 @@ O jogo não carrega nenhum arquivo de imagem. Todos os desenhos são gerados pel
 1. Edite o `index.html` e envie para o GitHub.
 2. O site atualiza sozinho em cerca de 1 minuto.
 3. O APK novo é gerado em cerca de 3 minutos (aba **Actions**) e aparece em **Releases**. A automação copia o `index.html` para `android/app/src/main/assets/` antes de compilar.
+
+## Jogadores e fases
+
+Na abertura, escolha quem vai voar: **Arthur** ou **Catarina**. Cada um tem seu mapa, suas estrelas, seu avião e seu recorde. O modo (fácil ou normal) muda no botão do mapa.
+
+| Fase | O que muda |
+|---|---|
+| 1. Céu de sol | Fase de aprendizado: pássaros, balões e montanhas. |
+| 2. Chuva | Nuvens de tempestade **piscam antes de soltar um raio**: espere passar. O vento empurra o avião para baixo. |
+| 3. Neve | **Gelo nas asas:** sem acelerar, o avião fica pesado. Montanhas mais altas e uma caverna. |
+| 4. Noite | Escuro de verdade: **só o farol ilumina**. Morcegos e uma caverna. |
+
+Cada fase termina num **aeroporto**. Perto dele, aparece uma **linha verde** até a pista: solte o A e desça por ela. As luzes ao lado da pista ficam brancas quando o avião está alto e vermelhas quando está baixo. Se passar da pista sem pousar, o avião arremete e tenta de novo.
+
+Estrelas de cada fase: ⭐ chegar ao aeroporto, ⭐ pegar 60% das estrelas do caminho (40% no fácil) e ⭐ pouso perfeito (tocar a pista devagar). Terminar uma fase libera a próxima. O **Voo livre** é o modo sem fim, com as estações mudando e cavernas.
+
+**Modo fácil** (pensado para 4 anos): só o analógico, sem botões. O avião acelera e decola sozinho, não explode (só pisca e segue), as fases têm 55% do tamanho e o pouso é feito pelo piloto automático.
 
 ## Controles e pontos
 

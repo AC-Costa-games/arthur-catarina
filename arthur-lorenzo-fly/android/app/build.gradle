@@ -10,13 +10,28 @@ android {
         applicationId 'com.arthurlorenzo.fly'
         minSdk 24
         targetSdk 34
-        versionCode 3
-        versionName '2.1'
+        versionCode 4
+        versionName '3.0'
+    }
+
+    // assinatura fixa: cada APK novo instala por cima do anterior sem apagar estrelas e recordes
+    signingConfigs {
+        fixa {
+            storeFile file('assinatura.p12')
+            storeType 'pkcs12'
+            storePassword 'arthurcatarina'
+            keyAlias 'alfly'
+            keyPassword 'arthurcatarina'
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.fixa
+        }
         release {
             minifyEnabled false
+            signingConfig signingConfigs.fixa
         }
     }
 
