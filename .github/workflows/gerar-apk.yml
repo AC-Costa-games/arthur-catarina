@@ -1,0 +1,56 @@
+name: Gerar APK
+
+# Roda quando o jogo ou o projeto Android mudam, ou pelo botão "Run workflow" na aba Actions
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - android/**
+      - .github/workflows/gerar-apk.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Usar a versão mais nova do jogo
+        run: cp ../index.html app/src/main/assets/index.html
+
+      - name: Compilar o APK
+        run: gradle assembleDebug --no-daemon
+
+      - name: Renomear
+        run: cp app/build/outputs/apk/debug/app-debug.apk ../arthur-lorenzo-fly.apk
+
+      - name: Guardar como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: arthur-lorenzo-fly.apk
+          path: arthur-lorenzo-fly.apk
+
+      - name: Publicar na página de Releases (download direto no celular)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: Arthur Lorenzo Fly (build ${{ github.run_number }})
+          body: Toque em arthur-lorenzo-fly.apk para baixar e instalar no Android.
+          files: arthur-lorenzo-fly.apk
+          make_latest: true

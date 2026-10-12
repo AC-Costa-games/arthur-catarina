@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+<g stroke="#1b1b1b" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+  <!-- struts -->
+  <line x1="236" y1="58" x2="252" y2="104" />
+  <line x1="318" y1="58" x2="306" y2="102" />
+  <line x1="228" y1="58" x2="190" y2="146" />
+  <line x1="326" y1="58" x2="352" y2="150" />
+  <!-- landing gear -->
+  <line x1="322" y1="158" x2="336" y2="204" />
+  <line x1="356" y1="156" x2="336" y2="204" />
+  <!-- tail fin -->
+  <path d="M66,118 L44,60 Q46,52 56,52 L84,56 L116,112 Z" fill="#C99A0E"/>
+  <!-- fuselage -->
+  <path d="M58,116 L126,110 L330,98 Q398,98 412,116 L412,150 Q398,166 330,166 L126,152 L58,140 Z" fill="#F7C531"/>
+  <!-- stripe -->
+  <path d="M100,128 L330,122 L408,124 L408,134 L330,136 L100,138 Z" fill="#2B2B2B" stroke-width="2"/>
+  <!-- horizontal stabilizer -->
+  <path d="M40,126 Q44,120 56,121 L118,124 L118,132 L56,135 Q44,134 40,126 Z" fill="#FFD95C"/>
+  <!-- cowl -->
+  <path d="M392,104 Q410,106 418,118 L418,148 Q410,160 392,162 Z" fill="#555"/>
+  <!-- windshield -->
+  <path d="M286,101 L296,82 L304,100 Z" fill="#BDE7FF"/>
+  <!-- pilot -->
+  <circle cx="272" cy="90" r="11" fill="#8B5A2B"/>
+  <rect x="266" y="84" width="14" height="6" rx="3" fill="#BDE7FF" stroke-width="2"/>
+  <!-- number roundel -->
+  <circle cx="190" cy="131" r="15" fill="#FFFFFF"/>
+  <text x="190" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#1b1b1b" stroke="none">3</text>
+  <!-- parasol wing -->
+  <rect x="210" y="38" width="138" height="22" rx="11" fill="#FFD95C"/>
+  <line x1="222" y1="46" x2="330" y2="46" stroke="#ffffff" stroke-opacity="0.6" stroke-width="3"/>
+  <!-- wheels -->
+  <circle cx="336" cy="206" r="18" fill="#2b2b2b"/>
+  <circle cx="336" cy="206" r="6" fill="#bbbbbb" stroke-width="2"/>
+  <circle cx="64" cy="146" r="7" fill="#2b2b2b"/>
+  <!-- propeller -->
+  <ellipse cx="430" cy="133" rx="5" ry="52" fill="#9a9a9a" fill-opacity="0.55" stroke-width="2"/>
+  <circle cx="426" cy="133" r="9" fill="#2B2B2B"/>
+</g>
+</svg>
